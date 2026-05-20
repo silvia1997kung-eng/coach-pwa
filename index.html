@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Coach Studio">
+<meta name="theme-color" content="#534AB7">
+
+
+<title>Coach Studio</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --purple:#534AB7;--purple-l:#EEEDFE;--purple-m:#7F77DD;--purple-d:#3C3489;
+  --teal:#0F6E56;--teal-l:#E1F5EE;
+  --bg:#F7F7FB;--surface:#FFFFFF;--surface2:#F1F0F8;
+  --text:#1A1A2E;--text2:#6B6B8A;--text3:#9999B5;
+  --border:#E4E3F0;--border2:#D0CFEA;
+  --red:#A32D2D;--red-l:#FCEBEB;
+  --green:#0F6E56;--green-l:#E1F5EE;
+  --radius:12px;--radius-sm:8px;--radius-xs:6px;
+  --safe-top:env(safe-area-inset-top,0px);
+  --safe-bottom:env(safe-area-inset-bottom,0px);
+}
+html,body{height:100%;overflow:hidden;background:var(--bg);font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',sans-serif;font-size:15px;color:var(--text)}
+#app{display:flex;flex-direction:column;height:100%;padding-top:var(--safe-top)}
+
+/* Top header */
+.header{background:var(--purple);color:#fff;padding:14px 16px 12px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.header-title{font-size:17px;font-weight:600;letter-spacing:-.3px}
+.header-sub{font-size:12px;opacity:.75;margin-top:1px}
+.header-btn{width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.18);border:none;color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px}
+
+/* Scrollable content area */
+.content{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;background:var(--bg);padding:14px 14px calc(80px + var(--safe-bottom))}
+
+/* Bottom nav */
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-top:1px solid var(--border);display:flex;padding-bottom:var(--safe-bottom);z-index:100}
+.nav-tab{flex:1;padding:10px 4px 8px;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;color:var(--text3);border:none;background:none;font-family:inherit}
+.nav-tab.active{color:var(--purple)}
+.nav-tab i{font-size:22px}
+.nav-tab span{font-size:10px;font-weight:500}
+
+/* Cards */
+.card{background:var(--surface);border-radius:var(--radius);padding:14px;margin-bottom:10px;border:1px solid var(--border)}
+.card-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.card-title{font-size:14px;font-weight:600;display:flex;align-items:center;gap:6px;color:var(--text)}
+.section-label{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin:14px 0 8px;display:flex;align-items:center;gap:7px}
+.section-label::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* Buttons */
+.btn{padding:9px 16px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--surface);cursor:pointer;font-size:13px;color:var(--text);display:inline-flex;align-items:center;gap:6px;font-family:inherit;font-weight:500;transition:opacity .1s;-webkit-appearance:none}
+.btn:active{opacity:.7}
+.btn-primary{background:var(--purple);color:#fff;border-color:var(--purple)}
+.btn-sm{padding:6px 12px;font-size:12px}
+.btn-teal{background:var(--teal-l);color:var(--teal);border-color:var(--teal-l)}
+.btn-danger{background:var(--red-l);color:var(--red);border-color:var(--red-l)}
+.btn-block{width:100%;justify-content:center}
+.btn-ghost{border-color:transparent;background:transparent;padding-left:4px;padding-right:4px}
+
+/* Forms */
+.field{display:flex;flex-direction:column;gap:4px;margin-bottom:12px}
+.field label{font-size:12px;font-weight:600;color:var(--text2)}
+.field input,.field select,.field textarea{border:1px solid var(--border2);border-radius:var(--radius-sm);padding:10px 12px;font-size:15px;background:var(--surface);color:var(--text);width:100%;font-family:inherit;-webkit-appearance:none;appearance:none}
+.field textarea{resize:vertical;min-height:80px}
+.field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--purple);box-shadow:0 0 0 3px var(--purple-l)}
+.f2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.f3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+
+/* Badges */
+.badge{display:inline-flex;align-items:center;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600}
+.badge-purple{background:var(--purple-l);color:var(--purple)}
+.badge-teal{background:var(--teal-l);color:var(--teal)}
+.badge-gray{background:var(--surface2);color:var(--text2)}
+
+/* Student list */
+.stu-item{display:flex;align-items:center;gap:12px;padding:13px 14px;background:var(--surface);border-radius:var(--radius);margin-bottom:8px;border:1px solid var(--border);cursor:pointer}
+.stu-item:active{opacity:.7}
+.stu-avatar{width:42px;height:42px;border-radius:50%;background:var(--purple-l);color:var(--purple);font-size:17px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.stu-info{flex:1;min-width:0}
+.stu-name{font-size:15px;font-weight:600}
+.stu-sub{font-size:12px;color:var(--text2);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* Info rows */
+.info-row{display:flex;justify-content:space-between;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--border)}
+.info-row:last-child{border-bottom:none}
+.info-lbl{font-size:12px;color:var(--text2);font-weight:500;min-width:90px}
+.info-val{font-size:13px;color:var(--text);font-weight:500;text-align:right;flex:1}
+
+/* Exercise blocks */
+.ex-block{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:10px;overflow:hidden}
+.ex-hd{background:var(--surface2);padding:11px 13px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border)}
+.ex-hd-title{font-size:13px;font-weight:600;display:flex;align-items:center;gap:7px}
+.ex-body{padding:13px}
+
+/* Set table */
+.set-table{width:100%;border-collapse:collapse;font-size:13px}
+.set-table th{padding:7px 6px;background:var(--surface2);color:var(--text2);font-weight:600;font-size:11px;text-align:left;border-bottom:1px solid var(--border)}
+.set-table th:first-child{width:30px;text-align:center;border-radius:var(--radius-xs) 0 0 0}
+.set-table td{padding:5px 4px;border-bottom:1px solid var(--border);vertical-align:middle}
+.set-table td:first-child{text-align:center;font-size:11px;color:var(--text3);font-weight:600}
+.set-table tr:last-child td{border-bottom:none}
+.set-input{border:1px solid var(--border2);border-radius:var(--radius-xs);padding:6px 7px;font-size:13px;background:var(--surface);color:var(--text);width:100%;font-family:inherit;-webkit-appearance:none}
+.set-input:focus{outline:none;border-color:var(--purple);box-shadow:0 0 0 2px var(--purple-l)}
+
+/* Add buttons */
+.add-row-btn{border:1px dashed var(--border2);border-radius:var(--radius-sm);padding:8px;font-size:12px;color:var(--text3);background:transparent;width:100%;display:flex;align-items:center;justify-content:center;gap:5px;margin-top:8px;cursor:pointer;font-family:inherit}
+.add-row-btn:active{background:var(--purple-l);color:var(--purple);border-color:var(--purple)}
+.add-ex-btn{border:2px dashed var(--border2);border-radius:var(--radius);padding:16px;font-size:14px;color:var(--text3);background:transparent;width:100%;display:flex;align-items:center;justify-content:center;gap:7px;margin-top:6px;cursor:pointer;font-family:inherit}
+.add-ex-btn:active{background:var(--purple-l);color:var(--purple);border-color:var(--purple)}
+
+/* Spring dots */
+.spring-row{display:flex;gap:9px;align-items:center;flex-wrap:wrap;margin:6px 0}
+.sdot{width:28px;height:28px;border-radius:50%;cursor:pointer;border:3px solid transparent;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;flex-shrink:0}
+.sdot.sel{border-color:var(--text);transform:scale(1.1)}
+.spring-qty-row{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px}
+.spring-qty-chip{display:flex;align-items:center;gap:6px;font-size:12px;background:var(--surface2);padding:5px 10px;border-radius:20px;border:1px solid var(--border)}
+
+/* Photos */
+.photo-upload-zone{border:2px dashed var(--border2);border-radius:var(--radius);padding:28px 16px;text-align:center;cursor:pointer;color:var(--text3);margin-bottom:12px}
+.photo-upload-zone i{font-size:32px;display:block;margin-bottom:8px}
+.photo-upload-zone p{font-size:14px;margin-bottom:4px}
+.photo-upload-zone small{font-size:12px}
+.photo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.photo-thumb{position:relative;border-radius:var(--radius-sm);overflow:hidden;aspect-ratio:1;border:1px solid var(--border)}
+.photo-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.photo-del{position:absolute;top:4px;right:4px;width:22px;height:22px;border-radius:50%;background:rgba(0,0,0,.55);border:none;color:#fff;font-size:12px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.photo-caption{width:100%;margin-top:4px;border:1px solid var(--border2);border-radius:var(--radius-xs);padding:5px 8px;font-size:12px;background:var(--surface);color:var(--text);font-family:inherit}
+
+/* Lightbox */
+.lightbox{background:rgba(0,0,0,.88);border-radius:var(--radius);padding:16px;margin-bottom:12px;text-align:center}
+.lightbox img{max-width:100%;max-height:55vh;border-radius:var(--radius-sm);object-fit:contain}
+.lightbox-caption{color:rgba(255,255,255,.8);font-size:13px;margin-top:8px}
+.lightbox-nav{display:flex;justify-content:center;gap:10px;margin-top:12px}
+
+/* Log history card */
+.log-card{background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);margin-bottom:10px;overflow:hidden}
+.log-card-hd{background:var(--surface2);padding:11px 13px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:8px}
+.log-card-body{padding:12px 13px}
+
+/* Alert toast */
+.toast{position:fixed;top:calc(var(--safe-top) + 60px);left:50%;transform:translateX(-50%);background:var(--text);color:#fff;padding:10px 18px;border-radius:30px;font-size:13px;font-weight:500;z-index:999;opacity:0;transition:opacity .2s;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1}
+.toast.success{background:#1D7A5F}
+.toast.error{background:#A32D2D}
+
+/* Page transitions */
+.page{display:none}
+.page.active{display:block}
+.hidden{display:none!important}
+
+/* Back nav */
+.back-hd{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.back-hd h2{font-size:17px;font-weight:600;flex:1}
+
+/* Tab bar within page */
+.seg{display:flex;background:var(--surface2);border-radius:var(--radius-sm);padding:3px;gap:2px;margin-bottom:14px}
+.seg-btn{flex:1;padding:8px 6px;border-radius:var(--radius-xs);border:none;background:transparent;font-size:12px;font-weight:500;color:var(--text2);cursor:pointer;font-family:inherit;text-align:center}
+.seg-btn.active{background:var(--surface);color:var(--purple);font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.1)}
+
+/* DB section */
+.db-block-label{font-size:11px;font-weight:700;color:var(--purple);text-transform:uppercase;letter-spacing:.06em;padding:6px 0 4px;border-top:1px solid var(--border);margin-top:10px}
+.db-block-label:first-child{border-top:none;margin-top:0}
+.db-ex-row{display:flex;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);gap:10px}
+.db-ex-row:last-child{border-bottom:none}
+</style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.11.0/dist/tabler-icons.min.css">
+</head>
+<body>
+<div id="app">
+  <div class="header">
+    <div>
+      <div class="header-title" id="header-title">Coach Studio</div>
+      <div class="header-sub" id="header-sub">教練管理系統</div>
+    </div>
+    <button class="header-btn hidden" id="header-action-btn" onclick="headerAction()">
+      <i class="ti ti-plus" id="header-action-icon"></i>
+    </button>
+  </div>
+
+  <div class="content" id="main-content">
+
+    <!-- STUDENTS PAGE -->
+    <div id="page-students" class="page active">
+      <div id="stu-list-view">
+        <div id="students-list"></div>
+      </div>
+      <div id="stu-detail-view" class="hidden"></div>
+      <div id="stu-form-view" class="hidden"></div>
+    </div>
+
+    <!-- LOG PAGE -->
+    <div id="page-log" class="page">
+      <div class="card">
+        <div class="card-title" style="margin-bottom:12px"><i class="ti ti-calendar-event" style="color:var(--purple)"></i> 課程基本資訊</div>
+        <div class="f2">
+          <div class="field"><label>學員</label><select id="log-student"></select></div>
+          <div class="field"><label>日期</label><input id="log-date" type="date"></div>
+        </div>
+        <div class="f2">
+          <div class="field"><label>時間</label><input id="log-time" type="time" value="09:00"></div>
+          <div class="field"><label>地點</label><input id="log-location" placeholder="健身房"></div>
+        </div>
+      </div>
+
+      <div class="seg">
+        <button class="seg-btn active" onclick="switchSeg('weight')" id="seg-weight">重訓</button>
+        <button class="seg-btn" onclick="switchSeg('pilates')" id="seg-pilates">皮拉提斯</button>
+        <button class="seg-btn" onclick="switchSeg('photos')" id="seg-photos">照片</button>
+        <button class="seg-btn" onclick="switchSeg('note')" id="seg-note">備註</button>
+      </div>
+
+      <div id="seg-content-weight">
+        <div id="weight-exercises"></div>
+        <button class="add-ex-btn" onclick="addWeightEx()"><i class="ti ti-plus"></i> 新增重訓動作</button>
+      </div>
+      <div id="seg-content-pilates" class="hidden">
+        <div id="pilates-exercises"></div>
+        <button class="add-ex-btn" onclick="addPilatesEx()"><i class="ti ti-plus"></i> 新增皮拉提斯動作</button>
+      </div>
+      <div id="seg-content-photos" class="hidden">
+        <div id="log-photo-grid" class="photo-grid"></div>
+        <div class="photo-upload-zone" onclick="document.getElementById('log-photo-input').click()">
+          <i class="ti ti-camera"></i>
+          <p>點擊上傳照片</p>
+          <small>可一次選多張 · JPG / PNG / HEIC</small>
+        </div>
+        <input type="file" id="log-photo-input" accept="image/*" multiple style="display:none" onchange="handlePhotoUpload(event)">
+      </div>
+      <div id="seg-content-note" class="hidden">
+        <div class="field"><label>今日課程備註</label>
+          <textarea id="log-note" placeholder="今日學員狀態、需追蹤事項、下次課程方向…"></textarea>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:8px;margin-top:14px">
+        <button class="btn btn-primary btn-block" onclick="saveLog()"><i class="ti ti-device-floppy"></i> 儲存本次課程</button>
+        <button class="btn" onclick="clearLog()"><i class="ti ti-refresh"></i></button>
+      </div>
+    </div>
+
+    <!-- DB PAGE -->
+    <div id="page-db" class="page">
+      <div class="seg">
+        <button class="seg-btn active" onclick="switchDbSeg('weight')" id="dbseg-weight">重訓動作庫</button>
+        <button class="seg-btn" onclick="switchDbSeg('pilates')" id="dbseg-pilates">皮拉提斯動作庫</button>
+      </div>
+      <div id="dbseg-content-weight">
+        <div id="db-weight-list"></div>
+        <div class="card" style="border-style:dashed">
+          <div class="card-title" style="margin-bottom:12px"><i class="ti ti-plus" style="color:var(--purple)"></i> 新增重訓動作</div>
+          <div class="f2">
+            <div class="field"><label>動作名稱</label><input id="db-w-name" placeholder="槓鈴深蹲"></div>
+            <div class="field"><label>目標肌群</label><input id="db-w-muscle" placeholder="股四頭肌"></div>
+          </div>
+          <div class="field"><label>備注</label><input id="db-w-note" placeholder="注意事項"></div>
+          <button class="btn btn-primary btn-block" onclick="addDbEx('weight')"><i class="ti ti-plus"></i> 新增</button>
+        </div>
+      </div>
+      <div id="dbseg-content-pilates" class="hidden">
+        <div id="db-pilates-list"></div>
+        <div class="card" style="border-style:dashed">
+          <div class="card-title" style="margin-bottom:12px"><i class="ti ti-plus" style="color:var(--teal)"></i> 新增皮拉提斯動作</div>
+          <div class="f2">
+            <div class="field"><label>BASI 板塊</label><select id="db-p-block">
+              <option>Warm Up</option><option>Footwork</option><option>Abdominal</option><option>Hip Work</option>
+              <option>Spinal Articulation</option><option>Stretches</option>
+              <option>Full Body Integration 1</option><option>Full Body Integration 2</option>
+              <option>Arm Work</option><option>Leg Work</option>
+              <option>Lateral Flexion &amp; Rotation</option><option>Back Extension</option>
+            </select></div>
+            <div class="field"><label>動作名稱</label><input id="db-p-name" placeholder="Footwork Parallel"></div>
+          </div>
+          <div class="f2">
+            <div class="field"><label>難易程度</label><select id="db-p-level"><option>基礎</option><option>中級</option><option>進階</option></select></div>
+            <div class="field"><label>目標肌群</label><input id="db-p-muscle" placeholder="腹部核心"></div>
+          </div>
+          <div class="field"><label>備注</label><input id="db-p-note" placeholder="注意事項"></div>
+          <button class="btn btn-teal btn-block" onclick="addDbEx('pilates')"><i class="ti ti-plus"></i> 新增</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- HISTORY PAGE -->
+    <div id="page-history" class="page">
+      <div class="field" style="margin-bottom:12px">
+        <select id="hist-filter" onchange="renderHistory()"><option value="">全部學員</option></select>
+      </div>
+      <div id="history-list"></div>
+    </div>
+
+  </div><!-- /content -->
+
+  <!-- Bottom Nav -->
+  <div class="bottom-nav">
+    <button class="nav-tab active" onclick="showPage('students')" id="nav-students">
+      <i class="ti ti-users"></i><span>學員</span>
+    </button>
+    <button class="nav-tab" onclick="showPage('log')" id="nav-log">
+      <i class="ti ti-calendar-plus"></i><span>上課</span>
+    </button>
+    <button class="nav-tab" onclick="showPage('db')" id="nav-db">
+      <i class="ti ti-database"></i><span>動作庫</span>
+    </button>
+    <button class="nav-tab" onclick="showPage('history')" id="nav-history">
+      <i class="ti ti-history"></i><span>紀錄</span>
+    </button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const BASI=['Warm Up','Footwork','Abdominal','Hip Work','Spinal Articulation','Stretches','Full Body Integration 1','Full Body Integration 2','Arm Work','Leg Work','Lateral Flexion & Rotation','Back Extension'];
+const SPRINGS=[{key:'紅',hex:'#C62828',val:'1'},{key:'藍',hex:'#1565C0',val:'0.5'},{key:'黃',hex:'#F9A825',val:'0.25'},{key:'綠',hex:'#2E7D32',val:'1.25'}];
+
+function ls(){try{const s=localStorage.getItem('coachPWA_v1');if(s)return JSON.parse(s)}catch(e){}return null}
+function save(){try{localStorage.setItem('coachPWA_v1',JSON.stringify(state))}catch(e){toast('儲存失敗（儲存空間不足）','error')}}
+
+let state=ls()||{
+  students:[
+    {id:1,name:'王小美',gender:'女',dob:'1995/03/22',height:'162',weight:'56',fat:'26',start:'2025/06/01',goalS:'2個月減3kg',goalL:'體脂降至20%',classFreq:'每週2次',selfFreq:'每週1次',food:'無',bowel:'正常',sleep:'22:30',wake:'06:30',pain:'左肩偶爾緊繃',history:'無',eating:'無',period:'28天',pms:'輕微頭痛',meds:'無'},
+    {id:2,name:'李雅婷',gender:'女',dob:'1988/11/08',height:'168',weight:'62',fat:'28',start:'2025/07/15',goalS:'改善肩頸不適',goalL:'增肌維持健康',classFreq:'每週1次',selfFreq:'每週2次',food:'素食',bowel:'偶爾便秘',sleep:'23:30',wake:'07:00',pain:'頸部僵硬',history:'2020腰椎輕微突出',eating:'無',period:'30天',pms:'無',meds:'無'}
+  ],
+  exercises:{
+    weight:[{name:'槓鈴深蹲',muscle:'股四頭肌、臀大肌',note:'膝蓋不超腳尖'},{name:'啞鈴臥推',muscle:'胸大肌、三頭肌',note:'肩胛骨收合'},{name:'滑輪下拉',muscle:'背闊肌',note:'核心穩定'}],
+    pilates:[
+      {name:'Footwork Parallel',block:'Footwork',level:'基礎',muscle:'股四頭肌',note:'脊椎中立'},
+      {name:'Footwork V-Position',block:'Footwork',level:'基礎',muscle:'內收肌',note:'膝蓋對齊'},
+      {name:'Hundred',block:'Abdominal',level:'中級',muscle:'腹部核心',note:'頸部放鬆'},
+      {name:'Short Spine',block:'Spinal Articulation',level:'進階',muscle:'脊椎旋轉肌群',note:'逐節帶動'},
+      {name:'Hip Circle',block:'Hip Work',level:'中級',muscle:'髖屈肌',note:'骨盆穩定'},
+      {name:'Mermaid',block:'Stretches',level:'基礎',muscle:'側腰',note:'呼吸配合'}
+    ]
+  },
+  logs:[
+    {id:1,studentId:1,date:'2025/08/05',time:'10:00',location:'健身房',
+     weightEx:[{name:'槓鈴深蹲',sets:[{weight:'40kg',reps:'12',rest:'90秒',note:''},{weight:'40kg',reps:'10',rest:'90秒',note:'右膝微痠'}]}],
+     pilatesEx:[],photos:[],note:'今日狀態佳'},
+    {id:2,studentId:2,date:'2025/08/07',time:'14:00',location:'皮拉提斯教室',
+     weightEx:[],
+     pilatesEx:[{name:'Footwork Parallel',block:'Footwork',level:'基礎',muscle:'股四頭肌',springs:[{color:'紅',qty:'2'}],customSpring:'',timesLearned:'3',note:'腳跟需調整'}],
+     photos:[],note:'頸部不舒服，減少頸部動作'}
+  ],
+  nextId:3
+};
+
+let logPhotos=[];
+let wCount=0,pCount=0;
+let curPage='students';
+
+function showPage(p){
+  document.querySelectorAll('.page').forEach(e=>e.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(e=>e.classList.remove('active'));
+  document.getElementById('page-'+p).classList.add('active');
+  document.getElementById('nav-'+p).classList.add('active');
+  curPage=p;
+  const titles={students:'學員管理',log:'新增上課紀錄',db:'動作資料庫',history:'訓練紀錄'};
+  document.getElementById('header-title').textContent=titles[p];
+  const subs={students:'點選學員查看詳情',log:'記錄今日課程',db:'管理動作清單',history:'查詢過往課程'};
+  document.getElementById('header-sub').textContent=subs[p];
+  const haBtn=document.getElementById('header-action-btn');
+  if(p==='students'){haBtn.classList.remove('hidden');document.getElementById('header-action-icon').className='ti ti-user-plus'}
+  else{haBtn.classList.add('hidden')}
+  if(p==='log'){initLog()}
+  if(p==='db'){renderDb()}
+  if(p==='history'){renderHistFilter();renderHistory()}
+  document.getElementById('main-content').scrollTop=0;
+}
+
+function headerAction(){
+  if(curPage==='students'){showAddStudentForm()}
+}
+
+/* ===== STUDENTS ===== */
+function renderStudents(){
+  const el=document.getElementById('students-list');
+  if(!state.students.length){el.innerHTML='<div style="text-align:center;padding:40px;color:var(--text3)"><i class="ti ti-users" style="font-size:48px;display:block;margin-bottom:10px"></i>尚無學員<br><small>點右上角 + 新增</small></div>';return}
+  el.innerHTML=state.students.map(s=>{
+    const logs=state.logs.filter(l=>l.studentId===s.id).length;
+    return`<div class="stu-item" onclick="showStuDetail(${s.id})">
+      <div class="stu-avatar">${s.name[0]}</div>
+      <div class="stu-info">
+        <div class="stu-name">${s.name}</div>
+        <div class="stu-sub">${s.classFreq} · ${logs} 堂課紀錄</div>
+      </div>
+      <i class="ti ti-chevron-right" style="color:var(--text3);font-size:18px"></i>
+    </div>`;
+  }).join('');
+}
+
+function showStuDetail(id){
+  const s=state.students.find(x=>x.id===id);
+  document.getElementById('stu-list-view').classList.add('hidden');
+  document.getElementById('stu-form-view').classList.add('hidden');
+  const v=document.getElementById('stu-detail-view');
+  v.classList.remove('hidden');
+  v.innerHTML=`
+  <div class="back-hd">
+    <button class="btn btn-ghost" onclick="showStuList()"><i class="ti ti-arrow-left" style="font-size:20px"></i></button>
+    <h2>${s.name}</h2>
+    <button class="btn btn-teal btn-sm" onclick="showEditStu(${id})"><i class="ti ti-edit"></i> 修改</button>
+    <button class="btn btn-primary btn-sm" onclick="quickLog(${id})"><i class="ti ti-calendar-plus"></i></button>
+  </div>
+  <div id="edit-stu-form-${id}" class="hidden" style="background:var(--surface2);border-radius:var(--radius);padding:14px;margin-bottom:14px;border:1px solid var(--border)"></div>
+  <div class="card">
+    <div class="section-label">基本資訊</div>
+    ${[['姓名',s.name],['性別',s.gender],['生日',s.dob],['身高',s.height+' cm'],['開始日期',s.start],['起始體重',s.weight+' kg'],['起始體脂',s.fat+'%'],['上課頻率',s.classFreq],['自主訓練',s.selfFreq]].map(([l,v])=>`<div class="info-row"><span class="info-lbl">${l}</span><span class="info-val">${v||'—'}</span></div>`).join('')}
+    <div class="section-label">目標</div>
+    <div class="info-row"><span class="info-lbl">短期</span><span class="info-val">${s.goalS||'—'}</span></div>
+    <div class="info-row"><span class="info-lbl">長期</span><span class="info-val">${s.goalL||'—'}</span></div>
+    <div class="section-label">健康資訊</div>
+    ${[['睡眠',s.sleep+' 睡 / '+s.wake+' 起'],['排便',s.bowel],['疼痛不適',s.pain],['受傷病史',s.history],['飲食限制',s.food],['飲食失調史',s.eating],['經期/PMS',s.period+' / '+s.pms],['藥物',s.meds]].map(([l,v])=>`<div class="info-row"><span class="info-lbl">${l}</span><span class="info-val">${v||'—'}</span></div>`).join('')}
+  </div>`;
+}
+
+function showStuList(){
+  document.getElementById('stu-detail-view').classList.add('hidden');
+  document.getElementById('stu-form-view').classList.add('hidden');
+  document.getElementById('stu-list-view').classList.remove('hidden');
+  renderStudents();
+}
+
+function showEditStu(id){
+  const s=state.students.find(x=>x.id===id);
+  const f=document.getElementById('edit-stu-form-'+id);
+  f.classList.remove('hidden');
+  f.innerHTML=stuFormHTML(s,'saveEditStu('+id+')',(id));
+}
+
+function stuFormHTML(s,saveCall,cancelId){
+  const fv=k=>s?s[k]||'':'';
+  return`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+    <span style="font-size:14px;font-weight:600">${s?'修改學員資料':'新增學員'}</span>
+    ${cancelId?`<button class="btn btn-ghost" onclick="document.getElementById('edit-stu-form-${cancelId}').classList.add('hidden')"><i class="ti ti-x" style="font-size:18px"></i></button>`:'<button class="btn btn-ghost" onclick="showStuList()"><i class="ti ti-x" style="font-size:18px"></i></button>'}
+  </div>
+  <div class="f2"><div class="field"><label>姓名</label><input id="es-name" value="${fv('name')}" placeholder="學員姓名"></div><div class="field"><label>性別</label><select id="es-gender"><option${fv('gender')==='女'?' selected':''}>女</option><option${fv('gender')==='男'?' selected':''}>男</option></select></div></div>
+  <div class="f2"><div class="field"><label>生日</label><input id="es-dob" value="${fv('dob')}" placeholder="1990/01/15"></div><div class="field"><label>身高 cm</label><input id="es-height" value="${fv('height')}" placeholder="165"></div></div>
+  <div class="f2"><div class="field"><label>起始體重 kg</label><input id="es-weight" value="${fv('weight')}" placeholder="55"></div><div class="field"><label>起始體脂 %</label><input id="es-fat" value="${fv('fat')}" placeholder="25"></div></div>
+  <div class="f2"><div class="field"><label>計畫開始日期</label><input id="es-start" value="${fv('start')}" placeholder="2025/08/01"></div><div class="field"><label>上課頻率</label><input id="es-classFreq" value="${fv('classFreq')}" placeholder="每週2次"></div></div>
+  <div class="f2"><div class="field"><label>自主訓練</label><input id="es-selfFreq" value="${fv('selfFreq')}" placeholder="每週1次"></div><div class="field"><label>排便</label><input id="es-bowel" value="${fv('bowel')}" placeholder="正常"></div></div>
+  <div class="f2"><div class="field"><label>短期目標</label><input id="es-goalS" value="${fv('goalS')}" placeholder="1個月減2kg"></div><div class="field"><label>長期目標</label><input id="es-goalL" value="${fv('goalL')}" placeholder="半年增肌減脂"></div></div>
+  <div class="f2"><div class="field"><label>睡覺時間</label><input id="es-sleep" value="${fv('sleep')}" placeholder="23:00"></div><div class="field"><label>起床時間</label><input id="es-wake" value="${fv('wake')}" placeholder="07:00"></div></div>
+  <div class="field"><label>飲食限制</label><textarea id="es-food" placeholder="無 / 乳糖不耐…">${fv('food')}</textarea></div>
+  <div class="field"><label>疼痛不適部位</label><textarea id="es-pain" placeholder="無 / 右膝偶爾不舒服">${fv('pain')}</textarea></div>
+  <div class="field"><label>受傷 / 疾病紀錄</label><textarea id="es-history" placeholder="無">${fv('history')}</textarea></div>
+  <div class="field"><label>飲食失調史</label><textarea id="es-eating" placeholder="無">${fv('eating')}</textarea></div>
+  <div class="f2"><div class="field"><label>經期週期</label><input id="es-period" value="${fv('period')}" placeholder="28天"></div><div class="field"><label>明顯 PMS</label><input id="es-pms" value="${fv('pms')}" placeholder="無"></div></div>
+  <div class="field"><label>目前藥物</label><input id="es-meds" value="${fv('meds')}" placeholder="無"></div>
+  <button class="btn btn-primary btn-block" style="margin-top:10px" onclick="${saveCall}"><i class="ti ti-check"></i> 確認儲存</button>`;
+}
+
+function collectStuFields(){
+  const flds=['name','gender','dob','height','weight','fat','start','classFreq','selfFreq','bowel','goalS','goalL','sleep','wake','food','pain','history','eating','period','pms','meds'];
+  const obj={};flds.forEach(f=>{const el=document.getElementById('es-'+f);obj[f]=el?el.value:''});
+  return obj;
+}
+
+function saveEditStu(id){
+  const data=collectStuFields();
+  if(!data.name){toast('請輸入姓名','error');return}
+  const s=state.students.find(x=>x.id===id);
+  Object.assign(s,data);save();
+  toast('學員資料已更新！');
+  document.getElementById('edit-stu-form-'+id).classList.add('hidden');
+  showStuDetail(id);
+}
+
+function showAddStudentForm(){
+  document.getElementById('stu-list-view').classList.add('hidden');
+  document.getElementById('stu-detail-view').classList.add('hidden');
+  const v=document.getElementById('stu-form-view');
+  v.classList.remove('hidden');
+  v.innerHTML=`<div class="card">${stuFormHTML(null,'addStudent()',null)}</div>`;
+}
+
+function addStudent(){
+  const data=collectStuFields();
+  if(!data.name){toast('請輸入姓名','error');return}
+  data.id=state.nextId++;
+  state.students.push(data);save();
+  toast('學員已新增！');
+  showStuDetail(data.id);
+}
+
+function quickLog(id){
+  showPage('log');
+  document.getElementById('log-student').value=id;
+}
+
+/* ===== LOG ===== */
+function initLog(){
+  const t=new Date(),y=t.getFullYear(),m=String(t.getMonth()+1).padStart(2,'0'),d=String(t.getDate()).padStart(2,'0');
+  document.getElementById('log-date').value=`${y}-${m}-${d}`;
+  const sel=document.getElementById('log-student');
+  sel.innerHTML=state.students.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
+}
+
+function switchSeg(t){
+  ['weight','pilates','photos','note'].forEach(k=>{
+    document.getElementById('seg-'+k).classList.toggle('active',k===t);
+    document.getElementById('seg-content-'+k).classList.toggle('hidden',k!==t);
+  });
+}
+function switchDbSeg(t){
+  ['weight','pilates'].forEach(k=>{
+    document.getElementById('dbseg-'+k).classList.toggle('active',k===t);
+    document.getElementById('dbseg-content-'+k).classList.toggle('hidden',k!==t);
+  });
+}
+
+function addWeightEx(pre){
+  wCount++;const id='wex-'+wCount;
+  const names=state.exercises.weight.map(e=>`<option>${e.name}</option>`).join('');
+  const sets=pre?pre.sets:[{weight:'',reps:'',rest:'',note:''}];
+  const div=document.createElement('div');div.className='ex-block';div.id=id;
+  div.innerHTML=`<div class="ex-hd">
+    <div class="ex-hd-title"><i class="ti ti-barbell" style="color:var(--purple)"></i>
+      <input list="wn-${id}" id="${id}-name" value="${pre?.name||''}" placeholder="動作名稱" style="border:none;background:transparent;font-size:13px;font-weight:600;color:var(--text);width:160px;font-family:inherit">
+      <datalist id="wn-${id}">${names}</datalist>
+    </div>
+    <button class="btn btn-danger btn-sm" onclick="document.getElementById('${id}').remove()"><i class="ti ti-trash"></i></button>
+  </div>
+  <div class="ex-body">
+    <div style="overflow-x:auto">
+      <table class="set-table" style="min-width:340px">
+        <thead><tr><th>組</th><th>重量</th><th>次數</th><th>休息</th><th>備註</th><th style="width:28px"></th></tr></thead>
+        <tbody id="${id}-tbody">${sets.map((s,i)=>setRow(id,i+1,s)).join('')}</tbody>
+      </table>
+    </div>
+    <button class="add-row-btn" onclick="addSetRow('${id}')"><i class="ti ti-plus" style="font-size:14px"></i> 新增組數</button>
+  </div>`;
+  document.getElementById('weight-exercises').appendChild(div);
+}
+
+function setRow(exId,n,s){s=s||{};
+  return`<tr><td>${n}</td>
+    <td><input class="set-input" placeholder="40kg" value="${s.weight||''}" style="min-width:60px"></td>
+    <td><input class="set-input" placeholder="12" value="${s.reps||''}" style="min-width:40px"></td>
+    <td><input class="set-input" placeholder="90秒" value="${s.rest||''}" style="min-width:55px"></td>
+    <td><input class="set-input" placeholder="備註" value="${s.note||''}" style="min-width:70px"></td>
+    <td><button class="btn btn-ghost" style="padding:4px;color:var(--red)" onclick="this.closest('tr').remove()"><i class="ti ti-x" style="font-size:14px"></i></button></td>
+  </tr>`;
+}
+function addSetRow(exId){
+  const tb=document.getElementById(exId+'-tbody');
+  tb.insertAdjacentHTML('beforeend',setRow(exId,tb.querySelectorAll('tr').length+1,{}));
+}
+
+function getPilatesNames(block){return state.exercises.pilates.filter(e=>e.block===block).map(e=>e.name)}
+
+function addPilatesEx(pre){
+  pCount++;const id='pex-'+pCount;
+  const initBlock=pre?.block||BASI[0];
+  const selSprings=pre?.springs||[];
+  const div=document.createElement('div');div.className='ex-block';div.id=id;
+  div.innerHTML=`<div class="ex-hd">
+    <div class="ex-hd-title"><i class="ti ti-stretching" style="color:var(--teal)"></i> 皮拉提斯動作 #${pCount}</div>
+    <button class="btn btn-danger btn-sm" onclick="document.getElementById('${id}').remove()"><i class="ti ti-trash"></i></button>
+  </div>
+  <div class="ex-body">
+    <div class="f2">
+      <div class="field"><label>BASI 板塊</label>
+        <select id="${id}-block" onchange="updatePNames('${id}')">${BASI.map(b=>`<option${initBlock===b?' selected':''}>${b}</option>`).join('')}</select>
+      </div>
+      <div class="field"><label>動作名稱</label><select id="${id}-name"></select></div>
+    </div>
+    <div class="f2">
+      <div class="field"><label>難易程度</label>
+        <select id="${id}-level">${['基礎','中級','進階'].map(l=>`<option${pre?.level===l?' selected':''}>${l}</option>`).join('')}</select>
+      </div>
+      <div class="field"><label>目標肌群</label><input id="${id}-muscle" value="${pre?.muscle||''}" placeholder="腹部核心"></div>
+    </div>
+    <div class="field"><label>建議彈簧重</label>
+      <div class="spring-row" id="${id}-sdots">
+        ${SPRINGS.map(c=>`<div class="sdot${selSprings.some(s=>s.color===c.key)?' sel':''}" style="background:${c.hex}" onclick="toggleSpring('${id}',this,'${c.key}')">${c.key[0]}</div>`).join('')}
+        <span style="font-size:12px;color:var(--text3)">點選顏色</span>
+      </div>
+      <div class="spring-qty-row" id="${id}-sqty"></div>
+      <div style="display:flex;align-items:center;gap:8px;margin-top:8px">
+        <span style="font-size:12px;color:var(--text3)">其他：</span>
+        <input id="${id}-cspring" value="${pre?.customSpring||''}" placeholder="長彈簧×1" style="flex:1;border:1px solid var(--border2);border-radius:var(--radius-xs);padding:7px 10px;font-size:13px;background:var(--surface);color:var(--text);font-family:inherit">
+      </div>
+    </div>
+    <div class="f2">
+      <div class="field"><label>已學習次數</label><input type="number" id="${id}-times" value="${pre?.timesLearned||'1'}" min="0"></div>
+      <div class="field"><label>注意情況</label><input id="${id}-note" value="${pre?.note||''}" placeholder="今日觀察…"></div>
+    </div>
+  </div>`;
+  document.getElementById('pilates-exercises').appendChild(div);
+  updatePNames(id,pre?.name);
+  if(selSprings.length)selSprings.forEach(s=>renderSpringQty(id,s.color,true,s.qty));
+}
+
+function updatePNames(id,pre){
+  const bl=document.getElementById(id+'-block');const nm=document.getElementById(id+'-name');
+  if(!bl||!nm)return;
+  const names=getPilatesNames(bl.value);
+  nm.innerHTML=names.length?names.map(n=>`<option${pre===n?' selected':''}>${n}</option>`).join(''):`<option value=''>— 此板塊尚無動作 —</option>`;
+}
+
+function toggleSpring(id,el,color){
+  el.classList.toggle('sel');
+  renderSpringQty(id,color,el.classList.contains('sel'),'');
+}
+function renderSpringQty(id,color,add,def){
+  const row=document.getElementById(id+'-sqty');if(!row)return;
+  const ex=row.querySelector(`[data-color="${color}"]`);
+  const ci=SPRINGS.find(c=>c.key===color);
+  if(add&&!ex){
+    const w=document.createElement('div');w.className='spring-qty-chip';w.dataset.color=color;
+    w.innerHTML=`<span style="width:12px;height:12px;border-radius:50%;background:${ci?.hex||'#888'};display:inline-block"></span>
+      <span style="color:var(--text2)">${color}(${ci?.val})</span>
+      <input type="number" min="1" max="10" value="${def||1}" data-qty style="width:40px;border:1px solid var(--border2);border-radius:var(--radius-xs);padding:4px 6px;font-size:12px;background:var(--surface);color:var(--text);font-family:inherit"> 條`;
+    row.appendChild(w);
+  }else if(!add&&ex){row.removeChild(ex)}
+}
+function collectSprings(id){
+  const row=document.getElementById(id+'-sqty');if(!row)return[];
+  return Array.from(row.querySelectorAll('[data-color]')).map(w=>({color:w.dataset.color,qty:w.querySelector('[data-qty]')?.value||'1'}));
+}
+
+function handlePhotoUpload(e){
+  Array.from(e.target.files).forEach(f=>{
+    const r=new FileReader();
+    r.onload=ev=>{logPhotos.push({dataUrl:ev.target.result,caption:''});renderLogPhotos()};
+    r.readAsDataURL(f);
+  });
+  e.target.value='';
+}
+function renderLogPhotos(){
+  const grid=document.getElementById('log-photo-grid');
+  grid.innerHTML=logPhotos.map((p,i)=>`
+    <div>
+      <div class="photo-thumb" onclick="previewPhoto(${i},'log')">
+        <img src="${p.dataUrl}" alt="">
+        <button class="photo-del" onclick="event.stopPropagation();logPhotos.splice(${i},1);renderLogPhotos()"><i class="ti ti-x" style="font-size:11px"></i></button>
+      </div>
+      <input class="photo-caption" placeholder="說明" value="${p.caption||''}" oninput="logPhotos[${i}].caption=this.value">
+    </div>`).join('');
+}
+
+let previewCtx={photos:[],idx:0,logId:null};
+function previewPhoto(idx,src,logId){
+  const photos=src==='log'?logPhotos:(state.logs.find(l=>l.id===logId)?.photos||[]);
+  previewCtx={photos,idx,logId};
+  showPreview();
+}
+function showPreview(){
+  const {photos,idx}=previewCtx;
+  const p=photos[idx];if(!p)return;
+  const el=document.getElementById('photo-preview-overlay');
+  if(el)el.remove();
+  const ov=document.createElement('div');
+  ov.id='photo-preview-overlay';
+  ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:500;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;';
+  ov.innerHTML=`<img src="${p.dataUrl}" style="max-width:100%;max-height:70vh;border-radius:12px;object-fit:contain">
+    ${p.caption?`<div style="color:rgba(255,255,255,.8);font-size:13px;margin-top:10px">${p.caption}</div>`:''}
+    <div style="display:flex;gap:12px;margin-top:16px">
+      ${idx>0?`<button class="btn" style="background:rgba(255,255,255,.15);color:#fff;border-color:rgba(255,255,255,.3)" onclick="previewCtx.idx--;showPreview()"><i class="ti ti-chevron-left"></i></button>`:''}
+      <button class="btn" style="background:rgba(255,255,255,.15);color:#fff;border-color:rgba(255,255,255,.3)" onclick="document.getElementById('photo-preview-overlay').remove()"><i class="ti ti-x"></i> 關閉</button>
+      ${idx<photos.length-1?`<button class="btn" style="background:rgba(255,255,255,.15);color:#fff;border-color:rgba(255,255,255,.3)" onclick="previewCtx.idx++;showPreview()"><i class="ti ti-chevron-right"></i></button>`:''}
+    </div>`;
+  document.body.appendChild(ov);
+}
+
+function saveLog(){
+  const date=document.getElementById('log-date').value;
+  const studentId=parseInt(document.getElementById('log-student').value);
+  if(!date||!studentId){toast('請填寫日期和學員','error');return}
+  const wBlocks=document.querySelectorAll('[id^="wex-"]');
+  const pBlocks=document.querySelectorAll('[id^="pex-"]');
+  const weightEx=Array.from(wBlocks).map(b=>{
+    const rows=b.querySelectorAll('tbody tr');
+    return{name:document.getElementById(b.id+'-name')?.value||'',
+      sets:Array.from(rows).map(r=>{const ins=r.querySelectorAll('input');return{weight:ins[0]?.value||'',reps:ins[1]?.value||'',rest:ins[2]?.value||'',note:ins[3]?.value||''}})};
+  });
+  const pilatesEx=Array.from(pBlocks).map(b=>({
+    name:document.getElementById(b.id+'-name')?.value||'',
+    block:document.getElementById(b.id+'-block')?.value||'',
+    level:document.getElementById(b.id+'-level')?.value||'',
+    muscle:document.getElementById(b.id+'-muscle')?.value||'',
+    springs:collectSprings(b.id),
+    customSpring:document.getElementById(b.id+'-cspring')?.value||'',
+    timesLearned:document.getElementById(b.id+'-times')?.value||'',
+    note:document.getElementById(b.id+'-note')?.value||''
+  }));
+  state.logs.unshift({
+    id:state.nextId++,studentId,
+    date:date.replace(/-/g,'/'),
+    time:document.getElementById('log-time').value,
+    location:document.getElementById('log-location').value,
+    weightEx,pilatesEx,
+    photos:logPhotos.map(p=>({dataUrl:p.dataUrl,caption:p.caption||''})),
+    note:document.getElementById('log-note').value
+  });
+  save();toast('課程紀錄已儲存！');clearLog();
+}
+
+function clearLog(){
+  document.getElementById('weight-exercises').innerHTML='';
+  document.getElementById('pilates-exercises').innerHTML='';
+  document.getElementById('log-note').value='';
+  document.getElementById('log-location').value='';
+  document.getElementById('log-photo-grid').innerHTML='';
+  logPhotos=[];wCount=0;pCount=0;
+  switchSeg('weight');
+}
+
+/* ===== DB ===== */
+function renderDb(){renderDbW();renderDbP()}
+function renderDbW(){
+  document.getElementById('db-weight-list').innerHTML=state.exercises.weight.map((e,i)=>`
+    <div class="db-ex-row">
+      <i class="ti ti-barbell" style="color:var(--purple);font-size:18px;flex-shrink:0"></i>
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:600;font-size:14px">${e.name}</div>
+        <div style="font-size:12px;color:var(--text2)">${e.muscle}${e.note?' · '+e.note:''}</div>
+      </div>
+      <button class="btn btn-danger btn-sm" onclick="rmDb('weight',${i})"><i class="ti ti-trash"></i></button>
+    </div>`).join('');
+}
+function renderDbP(){
+  const byBlock={};BASI.forEach(b=>byBlock[b]=[]);
+  state.exercises.pilates.forEach(e=>{if(byBlock[e.block])byBlock[e.block].push(e)});
+  document.getElementById('db-pilates-list').innerHTML=BASI.map(b=>{
+    const exs=byBlock[b];if(!exs.length)return'';
+    return`<div class="db-block-label">${b}</div>
+    ${exs.map(e=>{const i=state.exercises.pilates.indexOf(e);return`
+      <div class="db-ex-row">
+        <i class="ti ti-stretching" style="color:var(--teal);font-size:18px;flex-shrink:0"></i>
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:600;font-size:14px">${e.name} <span class="badge badge-teal" style="font-size:10px">${e.level}</span></div>
+          <div style="font-size:12px;color:var(--text2)">${e.muscle}${e.note?' · '+e.note:''}</div>
+        </div>
+        <button class="btn btn-danger btn-sm" onclick="rmDb('pilates',${i})"><i class="ti ti-trash"></i></button>
+      </div>`}).join('')}`;
+  }).join('');
+}
+function addDbEx(type){
+  if(type==='weight'){
+    const name=document.getElementById('db-w-name').value;if(!name){toast('請輸入動作名稱','error');return}
+    state.exercises.weight.push({name,muscle:document.getElementById('db-w-muscle').value,note:document.getElementById('db-w-note').value});
+    ['db-w-name','db-w-muscle','db-w-note'].forEach(id=>document.getElementById(id).value='');
+    renderDbW();
+  }else{
+    const name=document.getElementById('db-p-name').value;if(!name){toast('請輸入動作名稱','error');return}
+    state.exercises.pilates.push({name,block:document.getElementById('db-p-block').value,level:document.getElementById('db-p-level').value,muscle:document.getElementById('db-p-muscle').value,note:document.getElementById('db-p-note').value});
+    ['db-p-name','db-p-muscle','db-p-note'].forEach(id=>document.getElementById(id).value='');
+    renderDbP();
+  }
+  save();toast('動作已加入資料庫！');
+}
+function rmDb(type,idx){state.exercises[type].splice(idx,1);save();type==='weight'?renderDbW():renderDbP()}
+
+/* ===== HISTORY ===== */
+function renderHistFilter(){
+  const sel=document.getElementById('hist-filter');const cur=sel.value;
+  sel.innerHTML='<option value="">全部學員</option>'+state.students.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
+  if(cur)sel.value=cur;
+}
+function renderHistory(){
+  const fv=document.getElementById('hist-filter').value;
+  const logs=fv?state.logs.filter(l=>l.studentId==fv):state.logs;
+  const el=document.getElementById('history-list');
+  if(!logs.length){el.innerHTML='<div style="text-align:center;padding:50px;color:var(--text3)"><i class="ti ti-calendar-off" style="font-size:48px;display:block;margin-bottom:10px"></i>尚無訓練紀錄</div>';return}
+  const wd=['日','一','二','三','四','五','六'];
+  const springStr=spr=>spr.map(s=>`${s.color}×${s.qty}`).join('+');
+  el.innerHTML=logs.map(l=>{
+    const s=state.students.find(x=>x.id===l.studentId);
+    const d=new Date(l.date.replace(/\//g,'-'));
+    const wdStr=isNaN(d)?'':` 週${wd[d.getDay()]}`;
+    const photoCount=l.photos?.length||0;
+    return`<div class="log-card" id="hlog-${l.id}">
+      <div class="log-card-hd">
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:600;font-size:14px">${l.date}${wdStr} ${l.time}</div>
+          <div style="display:flex;gap:5px;margin-top:4px;flex-wrap:wrap">
+            <span class="badge badge-purple">${s?.name||'未知'}</span>
+            ${l.location?`<span class="badge badge-gray">${l.location}</span>`:''}
+            ${photoCount?`<span class="badge badge-teal"><i class="ti ti-camera" style="font-size:11px"></i> ${photoCount}</span>`:''}
+          </div>
+        </div>
+        <button class="btn btn-teal btn-sm" onclick="editHistLog(${l.id})"><i class="ti ti-edit"></i></button>
+      </div>
+      <div class="log-card-body">
+        ${l.weightEx?.length?`<div class="section-label">重訓</div>
+          ${l.weightEx.map(e=>`<div style="margin-bottom:10px">
+            <div style="font-weight:600;font-size:13px;margin-bottom:6px;display:flex;align-items:center;gap:6px"><i class="ti ti-barbell" style="color:var(--purple)"></i>${e.name}</div>
+            <div style="overflow-x:auto"><table class="set-table" style="min-width:280px">
+              <thead><tr><th>組</th><th>重量</th><th>次數</th><th>休息</th><th>備註</th></tr></thead>
+              <tbody>${(e.sets||[]).map((s,i)=>`<tr><td>${i+1}</td><td>${s.weight||'—'}</td><td>${s.reps||'—'}</td><td>${s.rest||'—'}</td><td style="color:var(--text2)">${s.note||''}</td></tr>`).join('')}</tbody>
+            </table></div>
+          </div>`).join('')}`:''}
+        ${l.pilatesEx?.length?`<div class="section-label">皮拉提斯</div>
+          ${l.pilatesEx.map(e=>`<div style="padding:8px 0;border-bottom:1px solid var(--border)">
+            <div style="font-weight:600;font-size:13px;margin-bottom:4px;display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+              <i class="ti ti-stretching" style="color:var(--teal)"></i>${e.name}
+              <span class="badge badge-teal" style="font-size:10px">${e.block||''}</span>
+              <span class="badge badge-gray" style="font-size:10px">${e.level||''}</span>
+            </div>
+            <div style="font-size:12px;color:var(--text2)">
+              ${e.springs?.length?`彈簧：${springStr(e.springs)}${e.customSpring?' + '+e.customSpring:''}　`:''}已學 ${e.timesLearned||0} 次
+              ${e.note?`<div style="margin-top:2px">${e.note}</div>`:''}
+            </div>
+          </div>`).join('')}`:''}
+        ${l.photos?.length?`<div class="section-label">照片</div>
+          <div class="photo-grid" style="margin-bottom:8px">
+            ${l.photos.map((p,pi)=>`<div>
+              <div class="photo-thumb" onclick="previewPhoto(${pi},'hist',${l.id})"><img src="${p.dataUrl}" alt=""></div>
+              ${p.caption?`<div style="font-size:11px;color:var(--text2);margin-top:3px;text-align:center">${p.caption}</div>`:''}
+            </div>`).join('')}
+          </div>`:''}
+        ${l.note?`<div style="margin-top:8px;padding:10px 12px;background:var(--surface2);border-radius:var(--radius-sm);font-size:13px;color:var(--text2);border-left:3px solid var(--purple)">${l.note}</div>`:''}
+      </div>
+      <div id="hlog-edit-${l.id}" class="hidden" style="padding:13px;border-top:1px solid var(--border)"></div>
+    </div>`;
+  }).join('');
+}
+
+function editHistLog(logId){
+  const l=state.logs.find(x=>x.id===logId);
+  const el=document.getElementById('hlog-edit-'+logId);
+  if(!el.classList.contains('hidden')){el.classList.add('hidden');return}
+  el.classList.remove('hidden');
+  el.innerHTML=`<div style="font-size:13px;font-weight:600;margin-bottom:12px">編輯課程資訊</div>
+    <div class="f2">
+      <div class="field"><label>日期</label><input id="el-date-${logId}" value="${l.date}"></div>
+      <div class="field"><label>時間</label><input id="el-time-${logId}" value="${l.time}"></div>
+    </div>
+    <div class="field"><label>地點</label><input id="el-loc-${logId}" value="${l.location||''}"></div>
+    <div class="field"><label>今日備註</label><textarea id="el-note-${logId}">${l.note||''}</textarea></div>
+    <div style="display:flex;gap:8px;margin-top:10px">
+      <button class="btn btn-primary btn-block" onclick="saveHistLogEdit(${logId})"><i class="ti ti-check"></i> 儲存修改</button>
+      <button class="btn" onclick="document.getElementById('hlog-edit-${logId}').classList.add('hidden')"><i class="ti ti-x"></i></button>
+    </div>`;
+}
+function saveHistLogEdit(logId){
+  const l=state.logs.find(x=>x.id===logId);
+  l.date=document.getElementById('el-date-'+logId).value;
+  l.time=document.getElementById('el-time-'+logId).value;
+  l.location=document.getElementById('el-loc-'+logId).value;
+  l.note=document.getElementById('el-note-'+logId).value;
+  save();toast('紀錄已更新！');
+  document.getElementById('hlog-edit-'+logId).classList.add('hidden');
+  renderHistory();
+}
+
+/* ===== TOAST ===== */
+function toast(msg,type='success'){
+  const el=document.getElementById('toast');
+  el.textContent=msg;el.className='toast '+type+' show';
+  clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove('show'),2400);
+}
+
+/* ===== SERVICE WORKER ===== */
+});
+}
+
+renderStudents();
+</script>
+
+<script>
+(function(){
+  // Inline service worker via blob
+  if('serviceWorker' in navigator){
+    const swCode = "\nconst CACHE = 'coach-studio-v1';\nconst ASSETS = ['./'];\nself.addEventListener('install', e => { self.skipWaiting(); });\nself.addEventListener('activate', e => { self.clients.claim(); });\nself.addEventListener('fetch', e => {\n  e.respondWith(fetch(e.request).catch(() => new Response('offline')));\n});\n";
+    const blob = new Blob([swCode], {type:'application/javascript'});
+    const swUrl = URL.createObjectURL(blob);
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register(swUrl).catch(()=>{});
+    });
+  }
+
+  // Inline manifest via blob
+  const manifest = {"name": "Coach Studio \u6559\u7df4\u7ba1\u7406", "short_name": "Coach Studio", "description": "\u91cd\u8a13\u8207\u76ae\u62c9\u63d0\u65af\u6559\u7df4\u8a13\u7df4\u8a18\u9304\u7ba1\u7406\u7cfb\u7d71", "start_url": "./", "display": "standalone", "background_color": "#534AB7", "theme_color": "#534AB7", "orientation": "portrait-primary", "lang": "zh-TW", "icons": [{"src": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMAAAADACAIAAADdvvtQAAAE/ElEQVR4nO3dQW7bQAyFYaXo3QJ023WWOVWWOUTR23UxgCHUiOHoDcnHmf/bF4io35TiOtbL719/DuCqH9U/AHojIEgICBICgoSAICEgSAgIEgKChIAgISBICAgSAoKEgCAhIEgICBICgoSAICEgSAgIEgKChIAgISBICAiSn9U/gIuPz9fv/pP3t78RP0kvL3v+YeGFXJ6xYVIbBRQUzVc2iWnxgJKj+crCMa0ZkEk399YrabWAbNM5WymjdQJqkc7ZGhmtEFC7dM66Z9Q7oNbpnPXNqGtAy6Rz1jGjfgEtmc5Zr4w6BbR8OmddMmrzn6lb1XP0Od4eAXWZ5lwtjtr9EtZiiNGcL2fWG4h6Buc5+AbkPLV8ttNwvITZDsuB2+XMbgNRz2Nu8/EKyG06nqymZBSQ1VzM+czKJSCfiXRhMjGLgExm0Y7D3OoDcphCX+XTKw6o/PgXUDvDyoCoZ5bCSdZfwtBaWUCsn7mq5lkTEPVEKJlqQUDUEyd/ttwDQZIdEOsnWvKEUwOinhyZc84LiHoypU2beyBIkgJi/eTLmTkbCJKMgFg/VRImzwaCJDwg1k+t6PmzgSCJDYj14yD0LLCBIAkMiPXjI+5csIEgiQqI9eMm6IwUP63nv68KILsn+cwt5Ns5njmeB98yQUYPiHOb/uUeNfdAjw/D7RtMfBjOrSCgZ46Thu55zm1+QI8X6fNHSENns+Y2/fYgdQN9twkaGpznxvtAkOQFdO1lwRIyn9vkgPgN3N/cc5S0gZQXxM5LyH9u3ANBkhGQ/lLYcwm1mNvMgLgB6mLimeISBkl4QLO26G5XsS5zYwNBQkCQEBAk0wLiV7BeZp2v2I+0zr2D2+0+epb3t7/8VQZMERAkBAQJAUFCQJAQECQEBAkBQUJAkBAQJAQECQFBQkCQEBAksR/n+Ph8nfgZjK0+ctRlbtM2EB/W6WXW+eISBgkBQUJAkLR5Ws9Wd9BHn7mxgSCZGRC/iHUx8Uz1eOTlbtevocXcuIRB0uCx33uun8F/bpMD4jbI39xzlHcJu/aC2Hn9DOZz4x4IktSAvvuyYP0MznObH9Csh31Qz9msua3wvLBnZkE99zznVnMP9Pg4qecrhnMLeeTl8fTB+Dz7s5drc4t4k6X4obsUc43P3KIuYbyj6CbojPA+ECSBAbGEfMSdCzYQJLEBsYQchJ4FNhAkbZ7Wg2t4Wg+s9XjkJa5p9shLbKjBY79xDY/9RgN5AbGEMqVNO3UD0VCOzDlnX8JoKFryhLkHgqQgIJZQnPzZ1mwgGopQMtWySxgNzVU1T+6BIKkMiCU0S+EkizcQDelqZ1h/CaMhRfn06gM6DKbQlMPcLAI6PGbRi8nEXAI6bCbSgs+sjAI6nObizGpKXgEdZtMx5DafqG/n0Pl8f4AJt3QGuw104zmvKrbT8A3oMJ5aMuc5+F7Czra9nDmnM1hvoBv/OUZocdQ9AjqaTHOiLsfb4xJ2tvzlrEs6Q7+AhiUz6pXO0DWgYZmMOqYz9A5oaJ1R33SGFQIa2mXUPZ1hnYCGFhmtkc6wWkCDbUYrpTOsGdCNSUnrdXOzeEBnyTEtHM3ZRgGdBcW0STRnmwZ070JSG+Zyj4AgafOfqfBEQJAQECQEBAkBQUJAkBAQJAQECQFBQkCQEBAkBAQJAUFCQJAQECQEBAkBQUJAkBAQJAQECQFBQkCQ/AMuIKrZnVXYdQAAAABJRU5ErkJggg==", "sizes": "192x192", "type": "image/png", "purpose": "any maskable"}, {"src": "data:image/png;base64,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", "sizes": "512x512", "type": "image/png", "purpose": "any maskable"}]};
+  const mBlob = new Blob([JSON.stringify(manifest)], {type:'application/json'});
+  const mUrl = URL.createObjectURL(mBlob);
+  const mLink = document.createElement('link');
+  mLink.rel = 'manifest';
+  mLink.href = mUrl;
+  document.head.appendChild(mLink);
+
+  // Apple touch icon inline
+  const iconLink = document.createElement('link');
+  iconLink.rel = 'apple-touch-icon';
+  iconLink.href = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMAAAADACAIAAADdvvtQAAAE/ElEQVR4nO3dQW7bQAyFYaXo3QJ023WWOVWWOUTR23UxgCHUiOHoDcnHmf/bF4io35TiOtbL719/DuCqH9U/AHojIEgICBICgoSAICEgSAgIEgKChIAgISBICAgSAoKEgCAhIEgICBICgoSAICEgSAgIEgKChIAgISBICAiSn9U/gIuPz9fv/pP3t78RP0kvL3v+YeGFXJ6xYVIbBRQUzVc2iWnxgJKj+crCMa0ZkEk399YrabWAbNM5WymjdQJqkc7ZGhmtEFC7dM66Z9Q7oNbpnPXNqGtAy6Rz1jGjfgEtmc5Zr4w6BbR8OmddMmrzn6lb1XP0Od4eAXWZ5lwtjtr9EtZiiNGcL2fWG4h6Buc5+AbkPLV8ttNwvITZDsuB2+XMbgNRz2Nu8/EKyG06nqymZBSQ1VzM+czKJSCfiXRhMjGLgExm0Y7D3OoDcphCX+XTKw6o/PgXUDvDyoCoZ5bCSdZfwtBaWUCsn7mq5lkTEPVEKJlqQUDUEyd/ttwDQZIdEOsnWvKEUwOinhyZc84LiHoypU2beyBIkgJi/eTLmTkbCJKMgFg/VRImzwaCJDwg1k+t6PmzgSCJDYj14yD0LLCBIAkMiPXjI+5csIEgiQqI9eMm6IwUP63nv68KILsn+cwt5Ns5njmeB98yQUYPiHOb/uUeNfdAjw/D7RtMfBjOrSCgZ46Thu55zm1+QI8X6fNHSENns+Y2/fYgdQN9twkaGpznxvtAkOQFdO1lwRIyn9vkgPgN3N/cc5S0gZQXxM5LyH9u3ANBkhGQ/lLYcwm1mNvMgLgB6mLimeISBkl4QLO26G5XsS5zYwNBQkCQEBAk0wLiV7BeZp2v2I+0zr2D2+0+epb3t7/8VQZMERAkBAQJAUFCQJAQECQEBAkBQUJAkBAQJAQECQFBQkCQEBAksR/n+Ph8nfgZjK0+ctRlbtM2EB/W6WXW+eISBgkBQUJAkLR5Ws9Wd9BHn7mxgSCZGRC/iHUx8Uz1eOTlbtevocXcuIRB0uCx33uun8F/bpMD4jbI39xzlHcJu/aC2Hn9DOZz4x4IktSAvvuyYP0MznObH9Csh31Qz9msua3wvLBnZkE99zznVnMP9Pg4qecrhnMLeeTl8fTB+Dz7s5drc4t4k6X4obsUc43P3KIuYbyj6CbojPA+ECSBAbGEfMSdCzYQJLEBsYQchJ4FNhAkbZ7Wg2t4Wg+s9XjkJa5p9shLbKjBY79xDY/9RgN5AbGEMqVNO3UD0VCOzDlnX8JoKFryhLkHgqQgIJZQnPzZ1mwgGopQMtWySxgNzVU1T+6BIKkMiCU0S+EkizcQDelqZ1h/CaMhRfn06gM6DKbQlMPcLAI6PGbRi8nEXAI6bCbSgs+sjAI6nObizGpKXgEdZtMx5DafqG/n0Pl8f4AJt3QGuw104zmvKrbT8A3oMJ5aMuc5+F7Czra9nDmnM1hvoBv/OUZocdQ9AjqaTHOiLsfb4xJ2tvzlrEs6Q7+AhiUz6pXO0DWgYZmMOqYz9A5oaJ1R33SGFQIa2mXUPZ1hnYCGFhmtkc6wWkCDbUYrpTOsGdCNSUnrdXOzeEBnyTEtHM3ZRgGdBcW0STRnmwZ070JSG+Zyj4AgafOfqfBEQJAQECQEBAkBQUJAkBAQJAQECQFBQkCQEBAkBAQJAUFCQJAQECQEBAkBQUJAkBAQJAQECQFBQkCQ/AMuIKrZnVXYdQAAAABJRU5ErkJggg==';
+  document.head.appendChild(iconLink);
+})();
+</script>
+
+</body>
+</html>
