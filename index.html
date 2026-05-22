@@ -302,11 +302,11 @@ const SPRINGSDEF = [
 ];
 
 function lsLoad(){
-  try{ var s=localStorage.getItem('cs_v1'); if(s) return JSON.parse(s); }catch(e){}
+  try{ var s=localStorage.getItem('cs_v2'); if(s) return JSON.parse(s); }catch(e){}
   return null;
 }
 function lsSave(){
-  try{ localStorage.setItem('cs_v1', JSON.stringify(ST)); }
+  try{ localStorage.setItem('cs_v2', JSON.stringify(ST)); }
   catch(e){ showToast('儲存失敗（空間不足）','err'); }
 }
 
@@ -609,7 +609,7 @@ function addPEx(pre){
     +'</div><div class="ex-body">'
     +'<div class="f2">'
     +'<div class="field"><label>BASI 板塊</label>'
-    +'<select id="'+id+'-blk" onchange="updPNames(\''+id+'\')">'
+    +'<select id="'+id+'-blk" data-exid="'+id+'" onchange="updPNames(this.dataset.exid)">'
     +BASI.map(function(b){ return '<option'+(initBlock===b?' selected':'')+'>'+b+'</option>'; }).join('')
     +'</select></div>'
     +'<div class="field"><label>動作名稱</label><select id="'+id+'-name"></select></div>'
@@ -648,10 +648,17 @@ function updPNames(id, pre){
   var blk = document.getElementById(id+'-blk');
   var nm = document.getElementById(id+'-name');
   if(!blk||!nm) return;
-  var names = getPNames(blk.value);
-  nm.innerHTML = names.length
-    ? names.map(function(n){ return '<option'+(pre===n?' selected':'')+'>'+n+'</option>'; }).join('')
-    : '<option value="">— 此板塊尚無動作 —</option>';
+  var block = blk.value;
+  var names = getPNames(block);
+  if(names.length){
+    nm.innerHTML = names.map(function(n){
+      return '<option'+(pre===n?' selected':'')+'>'+n+'</option>';
+    }).join('');
+  } else {
+    nm.innerHTML = '<option value="">— 此板塊尚無動作 —</option>';
+  }
+  // Force the select to show updated options
+  nm.size = 0;
 }
 
 function toggleSpr(id, el, color){
