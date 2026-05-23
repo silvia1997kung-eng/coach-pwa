@@ -191,16 +191,18 @@ html,body{height:100%;overflow:hidden;background:var(--bg);font-family:-apple-sy
         <div id="dbpl"></div>
         <div class="card" style="border-style:dashed">
           <div class="card-title">＋ 新增皮拉提斯動作</div>
-          <div class="f2">
-            <div class="field"><label>BASI 板塊</label><select id="dbpb" onchange="filterDbPList()">
+          <div class="field"><label>BASI 板塊</label><select id="dbpb" onchange="onDbBlockChange()">
               <option>Warm Up</option><option>Footwork</option><option>Abdominal</option><option>Hip Work</option>
               <option>Spinal Articulation</option><option>Stretches</option>
               <option>Full Body Integration 1</option><option>Full Body Integration 2</option>
               <option>Arm Work</option><option>Leg Work</option>
               <option>Lateral Flexion &amp; Rotation</option><option>Back Extension</option>
             </select></div>
-            <div class="field"><label>動作名稱</label><input id="dbpn" placeholder="輸入新動作名稱"></div>
+          <div id="db-block-existing" style="margin-bottom:10px;padding:10px;background:var(--g3);border-radius:var(--r2);font-size:12px;display:none">
+            <div style="font-weight:600;color:var(--g4);margin-bottom:6px">此板塊現有動作：</div>
+            <div id="db-block-existing-list" style="color:var(--text2);line-height:1.8"></div>
           </div>
+          <div class="field"><label>動作名稱（輸入新動作）</label><input id="dbpn" placeholder="輸入新動作名稱"></div>
           <div class="f2">
             <div class="field"><label>難易程度</label><select id="dbpl2"><option>基礎</option><option>中級</option><option>進階</option></select></div>
             <div class="field"><label>目標肌群</label><input id="dbpm" placeholder="腹部核心"></div>
@@ -592,6 +594,9 @@ function addSetRow(exId){
 }
 
 // 皮拉提斯
+// Registry to map exId -> block select element
+var _pExRegistry = {};
+
 function getPNames(block){
   return ST.exercises.p.filter(function(e){ return e.block === block; }).map(function(e){ return e.name; });
 }
@@ -601,66 +606,108 @@ function addPEx(pre){
   var id = 'pex-'+pCnt;
   var initBlock = pre ? pre.block : BASI[0];
   var selSprings = pre ? (pre.springs||[]) : [];
+
   var div = document.createElement('div');
-  div.className = 'ex-block'; div.id = id;
+  div.className = 'ex-block';
+  div.id = id;
+
+  // Build BASI block select
+  var blockOpts = BASI.map(function(b){
+    return '<option'+(initBlock===b?' selected':'')+'>'+b+'</option>';
+  }).join('');
+
+  // Spring dots
+  var springDots = SPRINGSDEF.map(function(c){
+    var isSel = selSprings.some(function(s){ return s.color===c.key; });
+    return '<div class="sdot'+(isSel?' sel':'')+'" style="background:'+c.hex+';width:28px;height:28px" '
+      +'data-color="'+c.key+'" title="'+c.key+' = '+c.val+'">'+c.key[0]+'</div>';
+  }).join('');
+
+  // Level options
+  var levelOpts = ['基礎','中級','進階'].map(function(l){
+    return '<option'+(pre&&pre.level===l?' selected':'')+'>'+l+'</option>';
+  }).join('');
+
   div.innerHTML = '<div class="ex-hd">'
     +'<div class="ex-hd-title">🧘 皮拉提斯動作 #'+pCnt+'</div>'
-    +'<button class="btn btn-d btn-sm" onclick="document.getElementById(\''+id+'\').remove()">✕</button>'
+    +'<button class="btn btn-d btn-sm" data-remove="'+id+'">✕</button>'
     +'</div><div class="ex-body">'
     +'<div class="f2">'
     +'<div class="field"><label>BASI 板塊</label>'
-    +'<select id="'+id+'-blk" data-exid="'+id+'" onchange="updPNames(this.dataset.exid)">'
-    +BASI.map(function(b){ return '<option'+(initBlock===b?' selected':'')+'>'+b+'</option>'; }).join('')
-    +'</select></div>'
-    +'<div class="field"><label>動作名稱</label><select id="'+id+'-name"></select></div>'
+    +'<select id="'+id+'-blk">'+blockOpts+'</select>'
+    +'</div>'
+    +'<div class="field"><label>動作名稱</label>'
+    +'<select id="'+id+'-name"></select>'
+    +'</div>'
     +'</div>'
     +'<div class="f2">'
-    +'<div class="field"><label>難易程度</label><select id="'+id+'-lv">'
-    +['基礎','中級','進階'].map(function(l){ return '<option'+(pre&&pre.level===l?' selected':'')+'>'+l+'</option>'; }).join('')
-    +'</select></div>'
+    +'<div class="field"><label>難易程度</label><select id="'+id+'-lv">'+levelOpts+'</select></div>'
     +'<div class="field"><label>目標肌群</label><input id="'+id+'-mu" value="'+(pre?pre.muscle||'':'')+'" placeholder="腹部核心"></div>'
     +'</div>'
     +'<div class="field"><label>建議彈簧重</label>'
-    +'<div class="spr-row" id="'+id+'-sdots">'
-    +SPRINGSDEF.map(function(c){
-      var isSel = selSprings.some(function(s){ return s.color===c.key; });
-      return '<div class="sdot'+(isSel?' sel':'')+'" style="background:'+c.hex+';width:28px;height:28px" '
-        +'onclick="toggleSpr(\''+id+'\',this,\''+c.key+'\')" title="'+c.key+' = '+c.val+'">'+c.key[0]+'</div>';
-    }).join('')
+    +'<div class="spr-row" id="'+id+'-sdots">'+springDots
     +'<span style="font-size:12px;color:var(--text3)">點選</span>'
     +'</div>'
     +'<div class="spr-qty-row" id="'+id+'-sqty"></div>'
     +'<div style="display:flex;align-items:center;gap:8px;margin-top:8px">'
     +'<span style="font-size:12px;color:var(--text3)">其他：</span>'
     +'<input id="'+id+'-csp" value="'+(pre?pre.cspring||'':'')+'" placeholder="長彈簧×1" '
-    +'style="flex:1;border:1px solid var(--border2);border-radius:var(--r3);padding:7px 10px;font-size:13px;background:var(--surface);color:var(--text);font-family:inherit"></div>'
-    +'</div>'
+    +'style="flex:1;border:1px solid var(--border2);border-radius:var(--r3);padding:7px 10px;font-size:13px;background:var(--surface);color:var(--text);font-family:inherit">'
+    +'</div></div>'
     +'<div class="f2">'
     +'<div class="field"><label>已學習次數</label><input type="number" id="'+id+'-ti" value="'+(pre?pre.times||'1':'1')+'" min="0"></div>'
     +'<div class="field"><label>注意情況</label><input id="'+id+'-no" value="'+(pre?pre.note||'':'')+'" placeholder="今日觀察…"></div>'
     +'</div></div>';
+
   document.getElementById('pexs').appendChild(div);
-  // Small delay to ensure DOM is ready before populating name select
-  setTimeout(function(){ updPNames(id, pre ? pre.name : null); }, 10);
-  if(selSprings.length) selSprings.forEach(function(s){ renderSprQty(id, s.color, true, s.qty); });
+
+  // Attach events AFTER div is in DOM
+  // Remove button
+  div.querySelector('[data-remove]').addEventListener('click', function(){
+    document.getElementById(id).remove();
+  });
+
+  // Block select onchange - directly attach event listener, no string escaping needed
+  var blkSel = document.getElementById(id+'-blk');
+  blkSel.addEventListener('change', function(){
+    fillPNameSelect(id, null);
+  });
+
+  // Spring dots
+  div.querySelectorAll('.sdot').forEach(function(dot){
+    dot.addEventListener('click', function(){
+      dot.classList.toggle('sel');
+      renderSprQty(id, dot.dataset.color, dot.classList.contains('sel'), '');
+    });
+  });
+
+  // Initial population of name select
+  fillPNameSelect(id, pre ? pre.name : null);
+
+  // Pre-selected springs
+  if(selSprings.length){
+    selSprings.forEach(function(s){ renderSprQty(id, s.color, true, s.qty); });
+  }
 }
 
-function updPNames(id, pre){
+
+function fillPNameSelect(id, pre){
   var blk = document.getElementById(id+'-blk');
   var nm = document.getElementById(id+'-name');
-  if(!blk||!nm) return;
-  var block = blk.value;
-  var names = getPNames(block);
+  if(!blk || !nm) return;
+  var names = getPNames(blk.value);
   if(names.length){
     nm.innerHTML = names.map(function(n){
-      return '<option'+(pre===n?' selected':'')+'>'+n+'</option>';
+      return '<option'+(n===pre?' selected':'')+'>'+n+'</option>';
     }).join('');
   } else {
     nm.innerHTML = '<option value="">— 此板塊尚無動作 —</option>';
   }
-  // Force the select to show updated options
-  nm.size = 0;
 }
+
+// Keep updPNames as alias for backward compatibility
+function updPNames(id, pre){ fillPNameSelect(id, pre); }
+
 
 function toggleSpr(id, el, color){
   el.classList.toggle('sel');
@@ -785,6 +832,22 @@ function clearLog(){
 }
 
 // ── 動作資料庫 ────────────────────────────────────────────
+function onDbBlockChange(){
+  var block = document.getElementById('dbpb').value;
+  // Show existing exercises in this block
+  var names = getPNames(block);
+  var box = document.getElementById('db-block-existing');
+  var list = document.getElementById('db-block-existing-list');
+  if(names.length && box && list){
+    list.innerHTML = names.map(function(n){ return '• '+n; }).join('<br>');
+    box.style.display = 'block';
+  } else if(box){
+    box.style.display = 'none';
+  }
+  // Also filter the list above
+  filterDbPList();
+}
+
 function filterDbPList(){
   var block = document.getElementById('dbpb').value;
   var rows = document.querySelectorAll('#dbpl .db-blbl, #dbpl .db-row');
@@ -799,7 +862,13 @@ function filterDbPList(){
   });
 }
 
-function renderDb(){ renderDbW(); renderDbP(); }
+function renderDb(){
+  renderDbW();
+  renderDbP();
+  // Reset block filter display
+  var box = document.getElementById('db-block-existing');
+  if(box) box.style.display = 'none';
+}
 
 function renderDbW(){
   document.getElementById('dbwl').innerHTML = ST.exercises.w.map(function(e,i){
