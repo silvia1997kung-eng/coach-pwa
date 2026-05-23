@@ -192,14 +192,14 @@ html,body{height:100%;overflow:hidden;background:var(--bg);font-family:-apple-sy
         <div class="card" style="border-style:dashed">
           <div class="card-title">＋ 新增皮拉提斯動作</div>
           <div class="f2">
-            <div class="field"><label>BASI 板塊</label><select id="dbpb">
+            <div class="field"><label>BASI 板塊</label><select id="dbpb" onchange="filterDbPList()">
               <option>Warm Up</option><option>Footwork</option><option>Abdominal</option><option>Hip Work</option>
               <option>Spinal Articulation</option><option>Stretches</option>
               <option>Full Body Integration 1</option><option>Full Body Integration 2</option>
               <option>Arm Work</option><option>Leg Work</option>
               <option>Lateral Flexion &amp; Rotation</option><option>Back Extension</option>
             </select></div>
-            <div class="field"><label>動作名稱</label><input id="dbpn" placeholder="Footwork Parallel"></div>
+            <div class="field"><label>動作名稱</label><input id="dbpn" placeholder="輸入新動作名稱"></div>
           </div>
           <div class="f2">
             <div class="field"><label>難易程度</label><select id="dbpl2"><option>基礎</option><option>中級</option><option>進階</option></select></div>
@@ -640,7 +640,8 @@ function addPEx(pre){
     +'<div class="field"><label>注意情況</label><input id="'+id+'-no" value="'+(pre?pre.note||'':'')+'" placeholder="今日觀察…"></div>'
     +'</div></div>';
   document.getElementById('pexs').appendChild(div);
-  updPNames(id, pre ? pre.name : null);
+  // Small delay to ensure DOM is ready before populating name select
+  setTimeout(function(){ updPNames(id, pre ? pre.name : null); }, 10);
   if(selSprings.length) selSprings.forEach(function(s){ renderSprQty(id, s.color, true, s.qty); });
 }
 
@@ -784,6 +785,20 @@ function clearLog(){
 }
 
 // ── 動作資料庫 ────────────────────────────────────────────
+function filterDbPList(){
+  var block = document.getElementById('dbpb').value;
+  var rows = document.querySelectorAll('#dbpl .db-blbl, #dbpl .db-row');
+  var curBlock = '';
+  rows.forEach(function(el){
+    if(el.classList.contains('db-blbl')){
+      curBlock = el.textContent.trim();
+      el.style.display = (curBlock === block) ? '' : 'none';
+    } else {
+      el.style.display = (curBlock === block) ? '' : 'none';
+    }
+  });
+}
+
 function renderDb(){ renderDbW(); renderDbP(); }
 
 function renderDbW(){
@@ -797,6 +812,7 @@ function renderDbW(){
 }
 
 function renderDbP(){
+  // Reset filter when re-rendering
   var byBlock = {};
   BASI.forEach(function(b){ byBlock[b] = []; });
   ST.exercises.p.forEach(function(e){ if(byBlock[e.block]) byBlock[e.block].push(e); });
