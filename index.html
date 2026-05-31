@@ -1006,30 +1006,136 @@ function editHistLog(id){
   var el = document.getElementById('he-'+id);
   if(!el.classList.contains('hidden')){ el.classList.add('hidden'); return; }
   el.classList.remove('hidden');
-
-  // Build form using DOM methods to avoid all string escaping issues
   el.innerHTML = '';
 
+  // ── 標題
   var title = document.createElement('div');
-  title.style.cssText = 'font-size:13px;font-weight:600;margin-bottom:12px';
-  title.textContent = '✏️ 編輯課程資訊';
+  title.style.cssText = 'font-size:14px;font-weight:600;margin-bottom:14px;color:var(--g4)';
+  title.textContent = '✏️ 編輯課程紀錄';
   el.appendChild(title);
 
-  var row1 = document.createElement('div');
-  row1.className = 'f2';
-  row1.innerHTML = '<div class="field"><label>日期</label><input id="ed-date-'+id+'" value="'+l.date+'"></div>'
-    +'<div class="field"><label>時間</label><input id="ed-time-'+id+'" value="'+l.time+'"></div>';
-  el.appendChild(row1);
+  // ── 基本資訊
+  var basic = document.createElement('div');
+  basic.innerHTML = '<div class="f2" style="margin-bottom:10px">'
+    +'<div class="field"><label>日期</label><input id="ed-date-'+id+'" value="'+l.date+'"></div>'
+    +'<div class="field"><label>時間</label><input id="ed-time-'+id+'" value="'+l.time+'"></div>'
+    +'</div>'
+    +'<div class="field"><label>地點</label><input id="ed-loc-'+id+'" value="'+(l.loc||'')+'"></div>';
+  el.appendChild(basic);
 
-  var locField = document.createElement('div');
-  locField.className = 'field';
-  locField.innerHTML = '<label>地點</label>';
-  var locInput = document.createElement('input');
-  locInput.id = 'ed-loc-'+id;
-  locInput.value = l.loc || '';
-  locField.appendChild(locInput);
-  el.appendChild(locField);
+  // ── 重訓區塊
+  if(l.wex && l.wex.length){
+    var wLabel = document.createElement('div');
+    wLabel.className = 'slbl';
+    wLabel.textContent = '重訓';
+    el.appendChild(wLabel);
 
+    l.wex.forEach(function(ex, ei){
+      var exDiv = document.createElement('div');
+      exDiv.style.cssText = 'margin-bottom:12px;background:var(--surface2);border-radius:var(--r2);padding:10px';
+
+      var exNameRow = document.createElement('div');
+      exNameRow.className = 'field';
+      exNameRow.innerHTML = '<label>動作名稱</label>';
+      var exNameInput = document.createElement('input');
+      exNameInput.id = 'ed-wname-'+id+'-'+ei;
+      exNameInput.value = ex.name || '';
+      exNameRow.appendChild(exNameInput);
+      exDiv.appendChild(exNameRow);
+
+      // Set table
+      var tbl = document.createElement('table');
+      tbl.className = 'stbl';
+      tbl.style.marginTop = '6px';
+      tbl.innerHTML = '<thead><tr><th>組</th><th>重量</th><th>次數</th><th>休息</th><th>備註</th><th style="width:28px"></th></tr></thead>';
+      var tbody = document.createElement('tbody');
+      tbody.id = 'ed-wtb-'+id+'-'+ei;
+
+      (ex.sets||[]).forEach(function(s, si){
+        var tr = document.createElement('tr');
+        tr.innerHTML = '<td>'+(si+1)+'</td>'
+          +'<td><input class="si" id="ed-ww-'+id+'-'+ei+'-'+si+'" value="'+(s.w||'')+'" placeholder="重量"></td>'
+          +'<td><input class="si" id="ed-wr-'+id+'-'+ei+'-'+si+'" value="'+(s.r||'')+'" placeholder="次數"></td>'
+          +'<td><input class="si" id="ed-wrest-'+id+'-'+ei+'-'+si+'" value="'+(s.rest||'')+'" placeholder="休息"></td>'
+          +'<td><input class="si" id="ed-wnote-'+id+'-'+ei+'-'+si+'" value="'+(s.note||'')+'" placeholder="備註"></td>'
+          +'<td><button class="btn btn-gh" style="padding:3px;color:var(--red)" data-remove-row>✕</button></td>';
+        tr.querySelector('[data-remove-row]').addEventListener('click', function(){ tr.remove(); });
+        tbody.appendChild(tr);
+      });
+      tbl.appendChild(tbody);
+      exDiv.appendChild(tbl);
+
+      // Add set button
+      var addSetBtn = document.createElement('button');
+      addSetBtn.className = 'add-r-btn';
+      addSetBtn.textContent = '＋ 新增組數';
+      addSetBtn.addEventListener('click', function(){
+        var rows = tbody.querySelectorAll('tr');
+        var n = rows.length + 1;
+        var tr2 = document.createElement('tr');
+        tr2.innerHTML = '<td>'+n+'</td>'
+          +'<td><input class="si" value="" placeholder="重量"></td>'
+          +'<td><input class="si" value="" placeholder="次數"></td>'
+          +'<td><input class="si" value="" placeholder="休息"></td>'
+          +'<td><input class="si" value="" placeholder="備註"></td>'
+          +'<td><button class="btn btn-gh" style="padding:3px;color:var(--red)" data-remove-row>✕</button></td>';
+        tr2.querySelector('[data-remove-row]').addEventListener('click', function(){ tr2.remove(); });
+        tbody.appendChild(tr2);
+      });
+      exDiv.appendChild(addSetBtn);
+      el.appendChild(exDiv);
+    });
+  }
+
+  // ── 皮拉提斯區塊
+  if(l.pex && l.pex.length){
+    var pLabel = document.createElement('div');
+    pLabel.className = 'slbl';
+    pLabel.textContent = '皮拉提斯';
+    el.appendChild(pLabel);
+
+    l.pex.forEach(function(ex, pi){
+      var pDiv = document.createElement('div');
+      pDiv.style.cssText = 'margin-bottom:12px;background:var(--surface2);border-radius:var(--r2);padding:10px';
+
+      // Block + Name
+      var blockOpts = ['Warm Up','Footwork','Abdominal','Hip Work','Spinal Articulation','Stretches',
+        'Full Body Integration 1','Full Body Integration 2','Arm Work','Leg Work',
+        'Lateral Flexion & Rotation','Back Extension']
+        .map(function(b){ return '<option'+(ex.block===b?' selected':'')+'>'+b+'</option>'; }).join('');
+
+      var row1 = document.createElement('div');
+      row1.className = 'f2';
+      row1.innerHTML = '<div class="field"><label>BASI 板塊</label><select id="ed-pblk-'+id+'-'+pi+'">'+blockOpts+'</select></div>'
+        +'<div class="field"><label>動作名稱</label><input id="ed-pname-'+id+'-'+pi+'" value="'+(ex.name||'')+'" placeholder="動作名稱"></div>';
+      pDiv.appendChild(row1);
+
+      var row2 = document.createElement('div');
+      row2.className = 'f2';
+      var lvOpts = ['基礎','中級','進階'].map(function(l){ return '<option'+(ex.level===l?' selected':'')+'>'+l+'</option>'; }).join('');
+      row2.innerHTML = '<div class="field"><label>難易程度</label><select id="ed-plv-'+id+'-'+pi+'">'+lvOpts+'</select></div>'
+        +'<div class="field"><label>目標肌群</label><input id="ed-pmu-'+id+'-'+pi+'" value="'+(ex.muscle||'')+'" placeholder="腹部核心"></div>';
+      pDiv.appendChild(row2);
+
+      // Springs display
+      var sprField = document.createElement('div');
+      sprField.className = 'field';
+      var sprVal = (ex.springs||[]).map(function(s){ return s.color+'×'+s.qty; }).join(' + ');
+      if(ex.cspring) sprVal += (sprVal?' + ':'')+ex.cspring;
+      sprField.innerHTML = '<label>彈簧重</label><input id="ed-pspr-'+id+'-'+pi+'" value="'+sprVal+'" placeholder="例：紅×2 + 藍×1">';
+      pDiv.appendChild(sprField);
+
+      var row3 = document.createElement('div');
+      row3.className = 'f2';
+      row3.innerHTML = '<div class="field"><label>已學習次數</label><input type="number" id="ed-pti-'+id+'-'+pi+'" value="'+(ex.times||0)+'" min="0"></div>'
+        +'<div class="field"><label>注意情況</label><input id="ed-pno-'+id+'-'+pi+'" value="'+(ex.note||'')+'"></div>';
+      pDiv.appendChild(row3);
+
+      el.appendChild(pDiv);
+    });
+  }
+
+  // ── 備註
   var noteField = document.createElement('div');
   noteField.className = 'field';
   noteField.innerHTML = '<label>今日備註</label>';
@@ -1039,41 +1145,82 @@ function editHistLog(id){
   noteField.appendChild(noteTA);
   el.appendChild(noteField);
 
+  // ── 按鈕
   var btnRow = document.createElement('div');
-  btnRow.style.cssText = 'display:flex;gap:8px;margin-top:10px';
-
+  btnRow.style.cssText = 'display:flex;gap:8px;margin-top:12px';
   var saveBtn = document.createElement('button');
   saveBtn.className = 'btn btn-p btn-blk';
-  saveBtn.textContent = '✓ 儲存';
+  saveBtn.textContent = '✓ 儲存所有修改';
   saveBtn.addEventListener('click', function(){ saveHistEdit(id); });
-
   var cancelBtn = document.createElement('button');
   cancelBtn.className = 'btn';
   cancelBtn.textContent = '取消';
   cancelBtn.addEventListener('click', function(){ el.classList.add('hidden'); });
-
   btnRow.appendChild(saveBtn);
   btnRow.appendChild(cancelBtn);
   el.appendChild(btnRow);
 }
 
 function saveHistEdit(id){
-  // Use == (loose equality) to handle both number and string id
   var l = ST.logs.find(function(x){ return x.id==id; });
-  if(!l){ showToast('找不到紀錄，請重試','err'); return; }
-  var dateEl = document.getElementById('ed-date-'+id);
-  var timeEl = document.getElementById('ed-time-'+id);
-  var locEl  = document.getElementById('ed-loc-'+id);
-  var noteEl = document.getElementById('ed-note-'+id);
-  if(!dateEl){ showToast('表單讀取失敗，請重試','err'); return; }
-  l.date = dateEl.value;
-  l.time = timeEl ? timeEl.value : l.time;
-  l.loc  = locEl  ? locEl.value  : l.loc;
-  l.note = noteEl ? noteEl.value : l.note;
+  if(!l){ showToast('找不到紀錄','err'); return; }
+  var el = document.getElementById('he-'+id);
+  if(!el){ return; }
+
+  // Basic info
+  var dateEl = el.querySelector('#ed-date-'+id);
+  var timeEl = el.querySelector('#ed-time-'+id);
+  var locEl  = el.querySelector('#ed-loc-'+id);
+  var noteEl = el.querySelector('#ed-note-'+id);
+  if(dateEl) l.date = dateEl.value;
+  if(timeEl) l.time = timeEl.value;
+  if(locEl)  l.loc  = locEl.value;
+  if(noteEl) l.note = noteEl.value;
+
+  // Weight exercises
+  if(l.wex){
+    l.wex.forEach(function(ex, ei){
+      var nameEl = el.querySelector('#ed-wname-'+id+'-'+ei);
+      if(nameEl) ex.name = nameEl.value;
+      var tbody = el.querySelector('#ed-wtb-'+id+'-'+ei);
+      if(tbody){
+        var rows = tbody.querySelectorAll('tr');
+        ex.sets = Array.from(rows).map(function(tr){
+          var ins = tr.querySelectorAll('input');
+          return {
+            w: ins[0] ? ins[0].value : '',
+            r: ins[1] ? ins[1].value : '',
+            rest: ins[2] ? ins[2].value : '',
+            note: ins[3] ? ins[3].value : ''
+          };
+        });
+      }
+    });
+  }
+
+  // Pilates exercises
+  if(l.pex){
+    l.pex.forEach(function(ex, pi){
+      var blkEl  = el.querySelector('#ed-pblk-'+id+'-'+pi);
+      var nmEl   = el.querySelector('#ed-pname-'+id+'-'+pi);
+      var lvEl   = el.querySelector('#ed-plv-'+id+'-'+pi);
+      var muEl   = el.querySelector('#ed-pmu-'+id+'-'+pi);
+      var sprEl  = el.querySelector('#ed-pspr-'+id+'-'+pi);
+      var tiEl   = el.querySelector('#ed-pti-'+id+'-'+pi);
+      var noEl   = el.querySelector('#ed-pno-'+id+'-'+pi);
+      if(blkEl)  ex.block   = blkEl.value;
+      if(nmEl)   ex.name    = nmEl.value;
+      if(lvEl)   ex.level   = lvEl.value;
+      if(muEl)   ex.muscle  = muEl.value;
+      if(sprEl)  ex.cspring = sprEl.value;
+      if(tiEl)   ex.times   = tiEl.value;
+      if(noEl)   ex.note    = noEl.value;
+    });
+  }
+
   lsSave();
   showToast('紀錄已更新！','ok');
-  var heEl = document.getElementById('he-'+id);
-  if(heEl) heEl.classList.add('hidden');
+  el.classList.add('hidden');
   renderHistory();
 }
 
