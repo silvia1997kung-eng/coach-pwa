@@ -1001,32 +1001,79 @@ function renderHistory(){
 }
 
 function editHistLog(id){
-  var l = ST.logs.find(function(x){ return x.id===id; });
+  var l = ST.logs.find(function(x){ return x.id==id; });
+  if(!l) return;
   var el = document.getElementById('he-'+id);
   if(!el.classList.contains('hidden')){ el.classList.add('hidden'); return; }
   el.classList.remove('hidden');
-  el.innerHTML = '<div style="font-size:13px;font-weight:600;margin-bottom:12px">✏️ 編輯課程資訊</div>'
-    +'<div class="f2">'
-    +'<div class="field"><label>日期</label><input id="ed-date-'+id+'" value="'+l.date+'"></div>'
-    +'<div class="field"><label>時間</label><input id="ed-time-'+id+'" value="'+l.time+'"></div>'
-    +'</div>'
-    +'<div class="field"><label>地點</label><input id="ed-loc-'+id+'" value="'+(l.loc||'')+'"></div>'
-    +'<div class="field"><label>今日備註</label><textarea id="ed-note-'+id+'">'+(l.note||'')+'</textarea></div>'
-    +'<div style="display:flex;gap:8px;margin-top:10px">'
-    +'<button class="btn btn-p btn-blk" onclick="saveHistEdit('+id+')">✓ 儲存</button>'
-    +'<button class="btn" onclick="document.getElementById(\'he-'+id+'\').classList.add(\'hidden\')">取消</button>'
-    +'</div>';
+
+  // Build form using DOM methods to avoid all string escaping issues
+  el.innerHTML = '';
+
+  var title = document.createElement('div');
+  title.style.cssText = 'font-size:13px;font-weight:600;margin-bottom:12px';
+  title.textContent = '✏️ 編輯課程資訊';
+  el.appendChild(title);
+
+  var row1 = document.createElement('div');
+  row1.className = 'f2';
+  row1.innerHTML = '<div class="field"><label>日期</label><input id="ed-date-'+id+'" value="'+l.date+'"></div>'
+    +'<div class="field"><label>時間</label><input id="ed-time-'+id+'" value="'+l.time+'"></div>';
+  el.appendChild(row1);
+
+  var locField = document.createElement('div');
+  locField.className = 'field';
+  locField.innerHTML = '<label>地點</label>';
+  var locInput = document.createElement('input');
+  locInput.id = 'ed-loc-'+id;
+  locInput.value = l.loc || '';
+  locField.appendChild(locInput);
+  el.appendChild(locField);
+
+  var noteField = document.createElement('div');
+  noteField.className = 'field';
+  noteField.innerHTML = '<label>今日備註</label>';
+  var noteTA = document.createElement('textarea');
+  noteTA.id = 'ed-note-'+id;
+  noteTA.textContent = l.note || '';
+  noteField.appendChild(noteTA);
+  el.appendChild(noteField);
+
+  var btnRow = document.createElement('div');
+  btnRow.style.cssText = 'display:flex;gap:8px;margin-top:10px';
+
+  var saveBtn = document.createElement('button');
+  saveBtn.className = 'btn btn-p btn-blk';
+  saveBtn.textContent = '✓ 儲存';
+  saveBtn.addEventListener('click', function(){ saveHistEdit(id); });
+
+  var cancelBtn = document.createElement('button');
+  cancelBtn.className = 'btn';
+  cancelBtn.textContent = '取消';
+  cancelBtn.addEventListener('click', function(){ el.classList.add('hidden'); });
+
+  btnRow.appendChild(saveBtn);
+  btnRow.appendChild(cancelBtn);
+  el.appendChild(btnRow);
 }
 
 function saveHistEdit(id){
-  var l = ST.logs.find(function(x){ return x.id===id; });
-  l.date = document.getElementById('ed-date-'+id).value;
-  l.time = document.getElementById('ed-time-'+id).value;
-  l.loc = document.getElementById('ed-loc-'+id).value;
-  l.note = document.getElementById('ed-note-'+id).value;
+  // Use == (loose equality) to handle both number and string id
+  var l = ST.logs.find(function(x){ return x.id==id; });
+  if(!l){ showToast('找不到紀錄，請重試','err'); return; }
+  var dateEl = document.getElementById('ed-date-'+id);
+  var timeEl = document.getElementById('ed-time-'+id);
+  var locEl  = document.getElementById('ed-loc-'+id);
+  var noteEl = document.getElementById('ed-note-'+id);
+  if(!dateEl){ showToast('表單讀取失敗，請重試','err'); return; }
+  l.date = dateEl.value;
+  l.time = timeEl ? timeEl.value : l.time;
+  l.loc  = locEl  ? locEl.value  : l.loc;
+  l.note = noteEl ? noteEl.value : l.note;
   lsSave();
   showToast('紀錄已更新！','ok');
-  document.getElementById('he-'+id).classList.add('hidden');
+  var heEl = document.getElementById('he-'+id);
+  if(heEl) heEl.classList.add('hidden');
   renderHistory();
 }
 
