@@ -1087,6 +1087,76 @@ function editHistLog(id){
     });
   }
 
+  // ── 新增重訓動作按鈕
+  var addWBtn = document.createElement('button');
+  addWBtn.className = 'add-ex-btn';
+  addWBtn.textContent = '＋ 新增重訓動作';
+  addWBtn.style.marginBottom = '10px';
+  addWBtn.addEventListener('click', function(){
+    var ei = el.querySelectorAll('[id^="ed-wname-'+id+'"]').length;
+    // Add new empty exercise block
+    var exDiv = document.createElement('div');
+    exDiv.style.cssText = 'margin-bottom:12px;background:var(--surface2);border-radius:var(--r2);padding:10px';
+
+    var exNameRow = document.createElement('div');
+    exNameRow.className = 'field';
+    exNameRow.innerHTML = '<label>動作名稱</label>';
+    var wNames = ST.exercises.w.map(function(e){ return '<option>'+e.name+'</option>'; }).join('');
+    var exNameInput = document.createElement('input');
+    exNameInput.id = 'ed-wname-'+id+'-'+ei;
+    exNameInput.placeholder = '動作名稱';
+    exNameInput.setAttribute('list', 'ed-wlist-'+id+'-'+ei);
+    var dl = document.createElement('datalist');
+    dl.id = 'ed-wlist-'+id+'-'+ei;
+    dl.innerHTML = wNames;
+    exNameRow.appendChild(exNameInput);
+    exNameRow.appendChild(dl);
+    exDiv.appendChild(exNameRow);
+
+    var tbl = document.createElement('table');
+    tbl.className = 'stbl';
+    tbl.style.marginTop = '6px';
+    tbl.innerHTML = '<thead><tr><th>組</th><th>重量</th><th>次數</th><th>休息</th><th>備註</th><th style="width:28px"></th></tr></thead>';
+    var tbody = document.createElement('tbody');
+    tbody.id = 'ed-wtb-'+id+'-'+ei;
+    // Start with one empty row
+    var tr = document.createElement('tr');
+    tr.innerHTML = '<td>1</td>'
+      +'<td><input class="si" placeholder="重量"></td>'
+      +'<td><input class="si" placeholder="次數"></td>'
+      +'<td><input class="si" placeholder="休息"></td>'
+      +'<td><input class="si" placeholder="備註"></td>'
+      +'<td><button class="btn btn-gh" style="padding:3px;color:var(--red)" data-remove-row>✕</button></td>';
+    tr.querySelector('[data-remove-row]').addEventListener('click', function(){ tr.remove(); });
+    tbody.appendChild(tr);
+    tbl.appendChild(tbody);
+    exDiv.appendChild(tbl);
+
+    var addSetBtn2 = document.createElement('button');
+    addSetBtn2.className = 'add-r-btn';
+    addSetBtn2.textContent = '＋ 新增組數';
+    addSetBtn2.addEventListener('click', function(){
+      var n = tbody.querySelectorAll('tr').length + 1;
+      var tr2 = document.createElement('tr');
+      tr2.innerHTML = '<td>'+n+'</td>'
+        +'<td><input class="si" placeholder="重量"></td>'
+        +'<td><input class="si" placeholder="次數"></td>'
+        +'<td><input class="si" placeholder="休息"></td>'
+        +'<td><input class="si" placeholder="備註"></td>'
+        +'<td><button class="btn btn-gh" style="padding:3px;color:var(--red)" data-remove-row>✕</button></td>';
+      tr2.querySelector('[data-remove-row]').addEventListener('click', function(){ tr2.remove(); });
+      tbody.appendChild(tr2);
+    });
+    exDiv.appendChild(addSetBtn2);
+
+    // Insert before this button
+    el.insertBefore(exDiv, addWBtn);
+    // Update l.wex array to include new slot
+    if(!l.wex) l.wex = [];
+    l.wex.push({name:'', sets:[]});
+  });
+  el.appendChild(addWBtn);
+
   // ── 皮拉提斯區塊
   if(l.pex && l.pex.length){
     var pLabel = document.createElement('div');
@@ -1135,6 +1205,53 @@ function editHistLog(id){
     });
   }
 
+  // ── 新增皮拉提斯動作按鈕
+  var addPBtn = document.createElement('button');
+  addPBtn.className = 'add-ex-btn';
+  addPBtn.textContent = '＋ 新增皮拉提斯動作';
+  addPBtn.style.marginBottom = '10px';
+  addPBtn.addEventListener('click', function(){
+    var pi = el.querySelectorAll('[id^="ed-pblk-'+id+'"]').length;
+    if(!l.pex) l.pex = [];
+    l.pex.push({name:'',block:'Footwork',level:'基礎',muscle:'',springs:[],cspring:'',times:'1',note:''});
+    var ex = l.pex[l.pex.length-1];
+
+    var pDiv = document.createElement('div');
+    pDiv.style.cssText = 'margin-bottom:12px;background:var(--surface2);border-radius:var(--r2);padding:10px';
+
+    var blockOpts = ['Warm Up','Footwork','Abdominal','Hip Work','Spinal Articulation','Stretches',
+      'Full Body Integration 1','Full Body Integration 2','Arm Work','Leg Work',
+      'Lateral Flexion & Rotation','Back Extension']
+      .map(function(b){ return '<option>'+b+'</option>'; }).join('');
+
+    var row1 = document.createElement('div');
+    row1.className = 'f2';
+    row1.innerHTML = '<div class="field"><label>BASI 板塊</label><select id="ed-pblk-'+id+'-'+pi+'">'+blockOpts+'</select></div>'
+      +'<div class="field"><label>動作名稱</label><input id="ed-pname-'+id+'-'+pi+'" placeholder="動作名稱"></div>';
+    pDiv.appendChild(row1);
+
+    var lvOpts = ['基礎','中級','進階'].map(function(lv){ return '<option>'+lv+'</option>'; }).join('');
+    var row2 = document.createElement('div');
+    row2.className = 'f2';
+    row2.innerHTML = '<div class="field"><label>難易程度</label><select id="ed-plv-'+id+'-'+pi+'">'+lvOpts+'</select></div>'
+      +'<div class="field"><label>目標肌群</label><input id="ed-pmu-'+id+'-'+pi+'" placeholder="腹部核心"></div>';
+    pDiv.appendChild(row2);
+
+    var sprField = document.createElement('div');
+    sprField.className = 'field';
+    sprField.innerHTML = '<label>彈簧重</label><input id="ed-pspr-'+id+'-'+pi+'" placeholder="例：紅×2 + 藍×1">';
+    pDiv.appendChild(sprField);
+
+    var row3 = document.createElement('div');
+    row3.className = 'f2';
+    row3.innerHTML = '<div class="field"><label>已學習次數</label><input type="number" id="ed-pti-'+id+'-'+pi+'" value="1" min="0"></div>'
+      +'<div class="field"><label>注意情況</label><input id="ed-pno-'+id+'-'+pi+'" placeholder="今日觀察…"></div>';
+    pDiv.appendChild(row3);
+
+    el.insertBefore(pDiv, addPBtn);
+  });
+  el.appendChild(addPBtn);
+
   // ── 備註
   var noteField = document.createElement('div');
   noteField.className = 'field';
@@ -1177,46 +1294,45 @@ function saveHistEdit(id){
   if(locEl)  l.loc  = locEl.value;
   if(noteEl) l.note = noteEl.value;
 
-  // Weight exercises
-  if(l.wex){
-    l.wex.forEach(function(ex, ei){
-      var nameEl = el.querySelector('#ed-wname-'+id+'-'+ei);
-      if(nameEl) ex.name = nameEl.value;
-      var tbody = el.querySelector('#ed-wtb-'+id+'-'+ei);
-      if(tbody){
-        var rows = tbody.querySelectorAll('tr');
-        ex.sets = Array.from(rows).map(function(tr){
-          var ins = tr.querySelectorAll('input');
-          return {
-            w: ins[0] ? ins[0].value : '',
-            r: ins[1] ? ins[1].value : '',
-            rest: ins[2] ? ins[2].value : '',
-            note: ins[3] ? ins[3].value : ''
-          };
-        });
-      }
-    });
-  }
+  // Weight exercises - collect ALL ed-wname elements (including newly added)
+  var allWNames = el.querySelectorAll('[id^="ed-wname-'+id+'-"]');
+  l.wex = Array.from(allWNames).map(function(nameEl, ei){
+    var tbody = el.querySelector('#ed-wtb-'+id+'-'+ei);
+    var sets = [];
+    if(tbody){
+      sets = Array.from(tbody.querySelectorAll('tr')).map(function(tr){
+        var ins = tr.querySelectorAll('input');
+        return {
+          w:    ins[0] ? ins[0].value : '',
+          r:    ins[1] ? ins[1].value : '',
+          rest: ins[2] ? ins[2].value : '',
+          note: ins[3] ? ins[3].value : ''
+        };
+      });
+    }
+    return { name: nameEl.value, sets: sets };
+  });
 
-  // Pilates exercises
-  if(l.pex){
-    l.pex.forEach(function(ex, pi){
-      var blkEl  = el.querySelector('#ed-pblk-'+id+'-'+pi);
-      var nmEl   = el.querySelector('#ed-pname-'+id+'-'+pi);
-      var lvEl   = el.querySelector('#ed-plv-'+id+'-'+pi);
-      var muEl   = el.querySelector('#ed-pmu-'+id+'-'+pi);
-      var sprEl  = el.querySelector('#ed-pspr-'+id+'-'+pi);
-      var tiEl   = el.querySelector('#ed-pti-'+id+'-'+pi);
-      var noEl   = el.querySelector('#ed-pno-'+id+'-'+pi);
-      if(blkEl)  ex.block   = blkEl.value;
-      if(nmEl)   ex.name    = nmEl.value;
-      if(lvEl)   ex.level   = lvEl.value;
-      if(muEl)   ex.muscle  = muEl.value;
-      if(sprEl)  ex.cspring = sprEl.value;
-      if(tiEl)   ex.times   = tiEl.value;
-      if(noEl)   ex.note    = noEl.value;
-    });
-  }
+  // Pilates exercises - collect ALL ed-pblk elements (including newly added)
+  var allPBlks = el.querySelectorAll('[id^="ed-pblk-'+id+'-"]');
+  l.pex = Array.from(allPBlks).map(function(blkEl, pi){
+    var nmEl  = el.querySelector('#ed-pname-'+id+'-'+pi);
+    var lvEl  = el.querySelector('#ed-plv-'+id+'-'+pi);
+    var muEl  = el.querySelector('#ed-pmu-'+id+'-'+pi);
+    var sprEl = el.querySelector('#ed-pspr-'+id+'-'+pi);
+    var tiEl  = el.querySelector('#ed-pti-'+id+'-'+pi);
+    var noEl  = el.querySelector('#ed-pno-'+id+'-'+pi);
+    return {
+      block:   blkEl.value,
+      name:    nmEl  ? nmEl.value  : '',
+      level:   lvEl  ? lvEl.value  : '基礎',
+      muscle:  muEl  ? muEl.value  : '',
+      cspring: sprEl ? sprEl.value : '',
+      times:   tiEl  ? tiEl.value  : '1',
+      note:    noEl  ? noEl.value  : '',
+      springs: []
+    };
+  });
 
   lsSave();
   showToast('紀錄已更新！','ok');
